@@ -25,13 +25,19 @@ import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Post
 import com.example.hacknews.model.PostsFeed
 import com.example.hacknews.utils.ErrorMessage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONException
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.net.URL
 import java.util.UUID
 
 /**
@@ -139,10 +145,42 @@ class HomeViewModel(
 
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
+            val url = "https://develop.sankosc.co.jp/apitest/api/hello"
+            weatherBackgroundTask(url)
+            
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
             }
         }
+    }
+
+    //３）HTTP通信（ワーカースレッド）の中身(※suspend＝中断する可能性がある関数につける)
+    private suspend fun weatherBackgroundTask(weatherUrl:String):String{
+        //withContext=スレッドを分離しますよ、Dispatchers.IO＝ワーカースレッド
+        val response = withContext(Dispatchers.IO){
+            // 天気情報サービスから取得した結果情報（JSON文字列）を後で入れるための変数（いったん空っぽ）を用意。
+            var httpResult = ""
+
+            //  try{エラーがあるかもしれない処理を実行}catch{実際エラーがあった場合}
+            try{
+                //ただのURL文字列をURLオブジェクトに変換（文字列にリンクを付けるイメージ）
+                val urlObj = URL(weatherUrl)
+
+                // アクセスしたAPIから情報を取得
+                //テキストファイルを読み込むクラス(文字コードを読めるようにする準備(URLオブジェクト))
+                val br = BufferedReader(InputStreamReader(urlObj.openStream()))
+                httpResult = br.readText()
+                httpResult = br.readText()
+            }catch (e: IOException){//IOExceptionとは例外管理するクラス
+                e.printStackTrace() //エラーが発生したよって言う
+            }catch (e: JSONException){ //JSONデータ構造に問題が発生した場合の例外
+                e.printStackTrace()
+            }
+            //HTTP接続の結果、取得したJSON文字列httpResultを戻り値とする
+            return@withContext httpResult
+        }
+
+        return response
     }
 
     /**
