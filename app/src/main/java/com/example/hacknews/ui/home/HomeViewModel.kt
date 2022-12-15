@@ -24,7 +24,10 @@ import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Post
 import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.net.Qiita
+import com.example.hacknews.net.QiitaRsp
 import com.example.hacknews.utils.ErrorMessage
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -143,11 +146,16 @@ class HomeViewModel(
     init {
         refreshPosts()
 
+        // TODO: Jsonマッピングの書き方
+//        val mapper = jacksonObjectMapper()
+//        val color = mapper.readValue(json, Color2::class.java)
+
+
+        val url = "https://qiita.com/api/v2/items?page=1&query=Twitter%E3%82%92%E6%95%91%E3%81%84%E3%81%9F%E3%81%84%EF%BC%81Flutter%E3%81%A7Twitter%E3%82%AF%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3%E3%83%88%E3%82%A2%E3%83%97%E3%83%AA%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%9F"
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
-            val url = "https://develop.sankosc.co.jp/apitest/api/hello"
             weatherBackgroundTask(url)
-            
+
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
             }
@@ -170,6 +178,11 @@ class HomeViewModel(
                 //テキストファイルを読み込むクラス(文字コードを読めるようにする準備(URLオブジェクト))
                 val br = BufferedReader(InputStreamReader(urlObj.openStream()))
                 httpResult = br.readText()
+
+                val color = jacksonObjectMapper().readValue(httpResult, QiitaRsp::class.java)
+//                val color = jacksonObjectMapper().readValue(httpResult, Array<Qiita>::class.java)
+                httpResult = color.toString()
+
                 httpResult = br.readText()
             }catch (e: IOException){//IOExceptionとは例外管理するクラス
                 e.printStackTrace() //エラーが発生したよって言う
@@ -180,8 +193,12 @@ class HomeViewModel(
             return@withContext httpResult
         }
 
+
         return response
     }
+
+//    data class Color2(val color: String, val kana: String, val code: Code)
+//    data class Code(val rgba: Array<Int>, val hex: String)
 
     /**
      * Refresh posts and update the UI state accordingly
