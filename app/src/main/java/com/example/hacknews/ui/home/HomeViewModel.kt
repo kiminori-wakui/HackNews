@@ -25,9 +25,7 @@ import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Post
 import com.example.hacknews.model.PostsFeed
 import com.example.hacknews.net.Qiita
-import com.example.hacknews.net.QiitaRsp
 import com.example.hacknews.utils.ErrorMessage
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,6 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
 import org.json.JSONException
 import java.io.BufferedReader
 import java.io.IOException
@@ -179,14 +178,18 @@ class HomeViewModel(
                 val br = BufferedReader(InputStreamReader(urlObj.openStream()))
                 httpResult = br.readText()
 
-                val color = jacksonObjectMapper().readValue(httpResult, QiitaRsp::class.java)
-//                val color = jacksonObjectMapper().readValue(httpResult, Array<Qiita>::class.java)
-                httpResult = color.toString()
+//                val json = """{"rendered_body":"aaa","body":"bbbb","coediting":false,"comments_count":0,"created_at":"2022-12-15T18:09:08+09:00","group":null,"id":"c76a777495aa1c6403a4","likes_count":0,"private":false,"reactions_count":0,"stocks_count":0,"tags":[{"name":"Twitter","versions":[]},{"name":"TwitterAPI","versions":[]},{"name":"開発プロセス","versions":[]},{"name":"Flutter","versions":[]}],"title":"Twitterを救いたい！FlutterでTwitterクライアントアプリを作った","updated_at":"2022-12-15T18:09:08+09:00","url":"https://qiita.com/Hanull/items/c76a777495aa1c6403a4","user":{"description":"アプリ・サービス・ゲーム開発などシステム開発を行うグループ","facebook_id":"","followees_count":1,"followers_count":1,"github_login_name":null,"id":"Hanull","items_count":5,"linkedin_id":"","location":"","name":"Hanull","organization":"Hanull","permanent_id":2727171,"profile_image_url":"https://pbs.twimg.com/profile_images/950048925590810624/iEhYOe_N_bigger.jpg","team_only":false,"twitter_screen_name":"hanulldog","website_url":"https://hanull.jp/"},"page_views_count":null,"team_membership":null}"""
+//                val json = """{"rendered_body":"aaa","body":"bbbb","coediting":false,"comments_count":0,"id":"c76a777495aa1c6403a4","likes_count":0,"private":false,"reactions_count":0,"stocks_count":0,"user":{"description":"アプリ・サービス・ゲーム開発などシステム開発を行うグループ","facebook_id":"","followees_count":1,"followers_count":1,"id":"Hanull","items_count":5,"linkedin_id":"","location":"","name":"Hanull","organization":"Hanull","permanent_id":2727171,"profile_image_url":"https://pbs.twimg.com/profile_images/950048925590810624/iEhYOe_N_bigger.jpg","team_only":false,"twitter_screen_name":"hanulldog","website_url":"https://hanull.jp/"},"team_membership":null}"""
+//                val color = Json.decodeFromString<Qiita>(string = json)
+////                val color = jacksonObjectMapper().readValue(httpResult, Array<Qiita>::class.java)
+//                httpResult = color.toString()
 
                 httpResult = br.readText()
             }catch (e: IOException){//IOExceptionとは例外管理するクラス
                 e.printStackTrace() //エラーが発生したよって言う
             }catch (e: JSONException){ //JSONデータ構造に問題が発生した場合の例外
+                e.printStackTrace()
+            }catch (e: Exception){
                 e.printStackTrace()
             }
             //HTTP接続の結果、取得したJSON文字列httpResultを戻り値とする

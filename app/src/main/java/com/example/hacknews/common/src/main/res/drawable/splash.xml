@@ -1,0 +1,9 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:opacity="opaque">
+
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splashimg" />
+    </item>
+
+</layer-list>
