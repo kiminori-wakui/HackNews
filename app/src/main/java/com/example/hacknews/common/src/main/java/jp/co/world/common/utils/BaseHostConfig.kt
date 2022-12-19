@@ -1,12 +1,12 @@
 package jp.co.world.common.utils
 
-import jp.co.world.common.BuildConfig
+import com.example.hacknews.BuildConfig
 import jp.co.world.common.network.config.SP_KEY_BASE_HOST
 
 
 fun getBaseHost(): String {
     return if (BuildConfig.DEBUG) {
-        MySpUtils.getString(SP_KEY_BASE_HOST) ?: HOST_DEV
+        HOST_DEV
     } else {
         HOST_PRODUCT
     }
@@ -46,10 +46,6 @@ fun getStaffStartBaseHost(): String {
     } else {
         HOST_SNAP_PROD
     }
-}
-
-fun setBaseHost(host: String) {
-    MySpUtils.put(SP_KEY_BASE_HOST, host)
 }
 
 

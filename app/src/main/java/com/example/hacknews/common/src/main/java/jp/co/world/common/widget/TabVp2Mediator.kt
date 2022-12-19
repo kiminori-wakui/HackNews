@@ -1,7 +1,6 @@
 package jp.co.world.common.widget
 
 import androidx.viewpager2.widget.ViewPager2
-import com.blankj.utilcode.util.LogUtils
 import com.google.android.material.tabs.TabLayout
 
 
@@ -38,7 +37,6 @@ class TabVp2Mediator(private val tab: TabLayout,
 
                 val index = item?.position ?: 0
 
-                LogUtils.w("tab select $index")
                 vp2.currentItem = map[item] ?: error("tab position $index no pager")
                 onSelect(index)
             }

@@ -1,6 +1,5 @@
 package jp.co.world.common.network.config
 
-import com.blankj.utilcode.util.LogUtils
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -24,7 +23,6 @@ class SResponseInterceptor : Interceptor {
         val response: Response = chain.proceed(chain.request())
 
         // // if(response.isSuccessful){
-        LogUtils.w("resp test")
 
         val newResponse = response.newBuilder()
         var contentType = response.header("Content-Type")
@@ -48,9 +46,7 @@ class SResponseInterceptor : Interceptor {
 
         var bbx = BaseResponsex(200, "XXXX-XXXX", "message")
         val resBodyRaw = Gson().toJson(bbx)
-        LogUtils.w("silver str", resBodyRaw)
         val resBody = resBodyRaw.replace("\"XXXX-XXXX\"", responseString)
-        LogUtils.w("silver str2", resBody)
 
         // val newRspString = "{code: 200, data: aaa, message: jjjj}"
 
@@ -58,7 +54,6 @@ class SResponseInterceptor : Interceptor {
         val bb =  newResponse.body(ResponseBody.create(response.body!!.contentType(), resBody)).build()
 
         val infoPrint = if(responseString.length > 101) {responseString.substring(0, 100)} else responseString
-        LogUtils.w("new rsp", infoPrint)//responseString.length, responseString, bb)
         return bb
         // // }
         // //

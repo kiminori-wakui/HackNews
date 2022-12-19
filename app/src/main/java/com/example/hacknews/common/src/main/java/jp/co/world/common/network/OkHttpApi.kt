@@ -1,20 +1,19 @@
 package jp.co.world.common.network
 
 import androidx.collection.SimpleArrayMap
-import com.blankj.utilcode.util.LogUtils
 import jp.co.world.common.network.config.XMLRequestInterceptor
 import jp.co.world.common.network.config.LocalCookieJar
 import jp.co.world.common.network.config.RetryInterceptor
 import jp.co.world.common.network.support.IHttpCallback
 import com.google.gson.Gson
-import com.opencsv.bean.CsvToBeanBuilder
+//import com.opencsv.bean.CsvToBeanBuilder
 import com.zsk.common.network.config.KtHttpLogInterceptor
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
-import com.example.hacknews.common.src.main.java.jp.co.world.common.config.SP_KEY_CUSTOM_EFS_VID
-import com.example.hacknews.common.src.main.java.jp.co.world.common.config.SP_KEY_LOGINED
-import com.example.hacknews.common.src.main.java.jp.co.world.common.config.SP_KEY_SSI
-import com.example.hacknews.common.src.main.java.jp.co.world.common.config.SP_KEY_USER_TOKEN
+import com.example.hacknews.common.src.main.res.config.SP_KEY_CUSTOM_EFS_VID
+import com.example.hacknews.common.src.main.res.config.SP_KEY_LOGINED
+import com.example.hacknews.common.src.main.res.config.SP_KEY_SSI
+import com.example.hacknews.common.src.main.res.config.SP_KEY_USER_TOKEN
 import jp.co.world.common.utils.*
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -131,7 +130,6 @@ class OkHttpApi private constructor() : HttpApi {
 
 
         val newURLStr = "${HOST_PRODUCT}$urlStr"
-        LogUtils.w("download ", newURLStr)
         val urlBuilder = newURLStr.toHttpUrl().newBuilder()
 
         val request = Request.Builder()
@@ -143,7 +141,6 @@ class OkHttpApi private constructor() : HttpApi {
         callMap.put(request.tag(), newCall)
         newCall.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                LogUtils.w("failed ", urlStr, e)
                 callback.onFailed(e.message)
             }
 
@@ -152,13 +149,14 @@ class OkHttpApi private constructor() : HttpApi {
 
                 val strReader = StringReader(bodyStr)
 
-                val beanList = CsvToBeanBuilder<T>(strReader)
-                    .withSeparator('\t')
-                    .withType(T::class.java)
-                    .withIgnoreLeadingWhiteSpace(true)
-                    .build()
-                    .parse()
+//                val beanList = CsvToBeanBuilder<T>(strReader)
+//                    .withSeparator('\t')
+//                    .withType(T::class.java)
+//                    .withIgnoreLeadingWhiteSpace(true)
+//                    .build()
+//                    .parse()
 
+                val beanList = listOf<T>()
 //                LogUtils.w("parse over ${beanList.size}", beanList.subList(0, 2))
 
                 val bodyList = beanList.subList(1, beanList.size)
@@ -257,17 +255,16 @@ class OkHttpApi private constructor() : HttpApi {
                 override fun onResponse(call: Call, response: Response) {
 
                     val bodyStr = response.body?.string()
-                    LogUtils.i("download response", bodyStr?.substring(0, 100))
 
                     val strReader = StringReader(bodyStr)
 
-                    val beanList = CsvToBeanBuilder<T>(strReader)
-                        .withSeparator('\t')
-                        .withType(T::class.java)
-                        .withIgnoreLeadingWhiteSpace(true)
-                        .build()
-                        .parse()
-
+//                    val beanList = CsvToBeanBuilder<T>(strReader)
+//                        .withSeparator('\t')
+//                        .withType(T::class.java)
+//                        .withIgnoreLeadingWhiteSpace(true)
+//                        .build()
+//                        .parse()
+                    val beanList = listOf<T>()
 
                     continuation.resume(beanList)
                 }
@@ -331,9 +328,8 @@ class OkHttpApi private constructor() : HttpApi {
 
         val jarx = LocalCookieJar()
 
-        val userToken = MySpUtils.getString(SP_KEY_USER_TOKEN) ?: ""
-        val ssi = MySpUtils.getString(SP_KEY_SSI) ?: ""
-        LogUtils.w("actk cookie", userToken, ssi)
+        val userToken = "MySpUtils.getString(SP_KEY_USER_TOKEN)"
+        val ssi = "MySpUtils.getString(SP_KEY_SSI)"
 
 //        jarx.setCookie(getBaseHost(), "authenticatedToken", userToken)
         jarx.setCookie(getBaseHost(), "ssi", ssi)
@@ -397,19 +393,13 @@ class OkHttpApi private constructor() : HttpApi {
                             val kv = it.split(";")[0]
                             if(response.request.url.toString().indexOf("actk.html") >= 0 && kv.startsWith("efs_vid")){
                                 val value = kv.split("=")[1]
-                                val logined = MySpUtils.getBoolean(SP_KEY_LOGINED)
-                                val eid = MySpUtils.getString(
-                                    SP_KEY_CUSTOM_EFS_VID
-                                )
+//                                val logined = MySpUtils.getBoolean(SP_KEY_LOGINED)
+                                val logined = false
+                                val eid = "MySpUtils.getString(SP_KEY_CUSTOM_EFS_VID)"
                                 if(!logined && eid == null){
-                                    MySpUtils.put(
-                                        SP_KEY_CUSTOM_EFS_VID, value)
+                                    "MySpUtils.put(SP_KEY_CUSTOM_EFS_VID, value)"
 
-                                    val sss = MySpUtils.getString(
-                                        SP_KEY_CUSTOM_EFS_VID
-                                    )
-                                    LogUtils.w("sss", value, sss)
-
+                                    val sss = "MySpUtils.getString(SP_KEY_CUSTOM_EFS_VID)"
                                 }
                             }
                         }

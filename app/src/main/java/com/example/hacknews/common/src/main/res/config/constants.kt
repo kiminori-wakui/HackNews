@@ -1,4 +1,4 @@
-package com.example.hacknews.common.src.main.java.jp.co.world.common.config
+package com.example.hacknews.common.src.main.res.config
 
 //const val SP_KEY_APP_STATE = "sp_app_state"  //0: nothing 1:update 2: force update 3: maintenance
 

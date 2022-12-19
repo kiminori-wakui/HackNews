@@ -4,11 +4,10 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.hacknews.net.*
-import com.example.hacknews.common.src.main.java.jp.co.world.common.config.SP_KEY_MAIL_ADDRESSS
+import com.example.hacknews.common.src.main.res.config.SP_KEY_MAIL_ADDRESSS
 import jp.co.world.common.model.SingleLiveData
 import jp.co.world.common.network.OkHttpApi
 import jp.co.world.common.network.support.serverData
-import jp.co.world.common.utils.MySpUtils
 import jp.co.world.service.net.*
 
 class ServiceRepo(val service: ServiceService, val wordService: SearchWordService): IServiceRepo {
@@ -229,7 +228,7 @@ class ServiceRepo(val service: ServiceService, val wordService: SearchWordServic
         val actk = match?.groups?.get(1)?.value ?: ""
         Log.d("actk", actk)
 
-        val loginEmail = MySpUtils.getString(SP_KEY_MAIL_ADDRESSS) ?: " "
+        val loginEmail = "MySpUtils.getString(SP_KEY_MAIL_ADDRESSS)"
 
         service.magazineRemove(mail=loginEmail ,mailMagazineId=mailMagazineId, actk = actk)
             .serverData()
