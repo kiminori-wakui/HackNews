@@ -152,16 +152,12 @@ dependencies {
     implementation "com.github.kittinunf.fuel:fuel-android:$fuel_version"
     implementation "com.github.kittinunf.fuel:fuel-json:$fuel_version"
 
-    implementation "com.github.mik3y:usb-serial-for-android:3.4.3"
-
     def paging_version = "3.0.0-beta01"
     implementation "androidx.paging:paging-runtime:$paging_version"
     testImplementation "androidx.paging:paging-common:$paging_version"
 
 
-    api 'com.blankj:utilcodex:1.29.0'
 
-    implementation 'com.tencent:mmkv-static:1.2.1'
 
 
     api 'com.google.code.gson:gson:2.8.6'
