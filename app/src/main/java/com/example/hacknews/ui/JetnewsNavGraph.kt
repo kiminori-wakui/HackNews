@@ -18,6 +18,7 @@ package com.example.hacknews.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -44,8 +45,12 @@ fun HacknewsNavGraph(
         modifier = modifier
     ) {
         composable(HacknewsDestinations.HOME_ROUTE) {
+            val context = LocalContext.current
             val homeViewModel: HomeViewModel = viewModel(
-                factory = HomeViewModel.provideFactory(appContainer.postsRepository)
+                factory = HomeViewModel.provideFactory(
+                    appContainer.postsRepository,
+                    context
+                )
             )
             HomeRoute(
                 homeViewModel = homeViewModel,

@@ -16,11 +16,16 @@
 
 package com.example.hacknews.ui.home
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import com.example.hacknews.R
 import com.example.hacknews.data.Result
+import com.example.hacknews.data.interests.MySingleton
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Post
 import com.example.hacknews.model.PostsFeed
@@ -126,7 +131,8 @@ private data class HomeViewModelState(
  * ViewModel that handles the business logic of the Home screen
  */
 class HomeViewModel(
-    private val postsRepository: PostsRepository
+    private val postsRepository: PostsRepository,
+    private val context: Context,
 ) : ViewModel() {
 
     private val viewModelState = MutableStateFlow(HomeViewModelState(isLoading = true))
@@ -146,12 +152,27 @@ class HomeViewModel(
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
             val url = "https://develop.sankosc.co.jp/apitest/api/hello"
-            weatherBackgroundTask(url)
-            
+//            weatherBackgroundTask(url)
+            requestWebApi(url)
+
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
             }
         }
+    }
+
+    fun requestWebApi(url: String) {
+        val jsonObjectRequest = JsonObjectRequest(
+            Request.Method.GET, url, null,
+            Response.Listener { response ->
+                val text = response.toString()
+            },
+            Response.ErrorListener { error ->
+                // TODO: Handle error
+            }
+        )
+        // Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(context = context).addToRequestQueue(jsonObjectRequest)
     }
 
     //３）HTTP通信（ワーカースレッド）の中身(※suspend＝中断する可能性がある関数につける)
@@ -270,10 +291,11 @@ class HomeViewModel(
     companion object {
         fun provideFactory(
             postsRepository: PostsRepository,
+            context: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HomeViewModel(postsRepository) as T
+                return HomeViewModel(postsRepository, context) as T
             }
         }
     }
