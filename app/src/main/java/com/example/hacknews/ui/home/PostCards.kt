@@ -93,7 +93,7 @@ fun PostTitle(post: Post) {
 }
 
 @Composable
-fun PostCardSimple(
+fun PostCard(
     post: Post,
     navigateToArticle: (String) -> Unit,
     isFavorite: Boolean,
@@ -128,6 +128,37 @@ fun PostCardSimple(
             modifier = Modifier.clearAndSetSemantics {},
             contentAlpha = ContentAlpha.medium
         )
+    }
+}
+
+@Composable
+fun PostCardSimple(
+    post: Post,
+    navigateToArticle: (String) -> Unit,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit
+) {
+    val bookmarkAction = stringResource(if (isFavorite) R.string.unbookmark else R.string.bookmark)
+    Row(
+        modifier = Modifier
+            .clickable(onClick = { navigateToArticle(post.id) })
+            .padding(16.dp)
+            .semantics {
+                // By defining a custom action, we tell accessibility services that this whole
+                // composable has an action attached to it. The accessibility service can choose
+                // how to best communicate this action to the user.
+                customActions = listOf(
+                    CustomAccessibilityAction(
+                        label = bookmarkAction,
+                        action = { onToggleFavorite(); true }
+                    )
+                )
+            }
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            PostTitle(post)
+            AuthorAndReadTime(post)
+        }
     }
 }
 

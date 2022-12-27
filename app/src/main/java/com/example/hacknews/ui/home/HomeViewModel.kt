@@ -27,6 +27,8 @@ import com.example.hacknews.R
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.interests.MySingleton
 import com.example.hacknews.data.posts.PostsRepository
+import com.example.hacknews.data.posts.impl.*
+import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Post
 import com.example.hacknews.model.PostsFeed
 import com.example.hacknews.utils.ErrorMessage
@@ -151,7 +153,7 @@ class HomeViewModel(
 
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
-            val url = "https://develop.sankosc.co.jp/apitest/api/hello"
+            val url = "https://connpass.com/api/v1/event/"
 //            weatherBackgroundTask(url)
             requestWebApi(url)
 
@@ -166,6 +168,52 @@ class HomeViewModel(
             Request.Method.GET, url, null,
             Response.Listener { response ->
                 val text = response.toString()
+                val events = response.getJSONArray("events")
+//                for (i in 0 until jsonArray.length()) {
+//                    val employee = jsonArray.getJSONObject(i)
+//                    val firstName = employee.getString("firstname")
+//                    val age = employee.getInt("age")
+//                    val mail = employee.getString("mail")
+//                }
+                val posts = mutableListOf<Post>()
+                for (i in 0 until events.length()) {
+                    val title = events.getJSONObject(i).getString("title")
+                    posts.add(
+                        Post(
+                            id = "84eb677660d9",
+                            title = title,
+                            subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
+                            url = "https://medium.com/androiddevelopers/locale-changes-and-the-androidviewmodel-antipattern-84eb677660d9",
+                            publication = publication,
+                            metadata = Metadata(
+                                author = jose,
+                                date = "April 02",
+                                readTimeMinutes = 1
+                            ),
+                            paragraphs = paragraphsPost4,
+                            imageId = R.drawable.post_4,
+                            imageThumbId = R.drawable.post_4_thumb
+                        )
+                    )
+                }
+                viewModelState.update {
+                    it.copy(
+                        postsFeed = PostsFeed(
+                            highlightedPost = post4,
+                            recommendedPosts = posts,
+                            popularPosts = listOf(
+                                post5,
+                                post1.copy(id = "post6"),
+                                post2.copy(id = "post7")
+                            ),
+                            recentPosts = listOf(
+                                post3.copy(id = "post8"),
+                                post4.copy(id = "post9"),
+                                post5.copy(id = "post10")
+                            )
+                        ),
+                    )
+                }
             },
             Response.ErrorListener { error ->
                 // TODO: Handle error
