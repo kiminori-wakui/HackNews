@@ -30,6 +30,18 @@ data class Post(
     @DrawableRes val imageThumbId: Int
 )
 
+data class Event(
+    val id: String,
+    val title: String,
+    val subtitle: String? = null,
+    val url: String,
+    val publication: Publication? = null,
+    val metadata: Metadata,
+    val paragraphs: List<Paragraph> = emptyList(),
+    @DrawableRes val imageId: Int,
+    @DrawableRes val imageThumbId: Int
+)
+
 data class Metadata(
     val author: PostAuthor,
     val date: String,

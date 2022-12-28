@@ -428,26 +428,37 @@ private fun PostList(
             }
         }
         item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
-        if (postsFeed.recommendedPosts.isNotEmpty()) {
+        if (postsFeed.recentEvents.isNotEmpty()) {
             item {
                 PostListSimpleSection(
-                    postsFeed.recommendedPosts,
+                    postsFeed.recentEvents,
                     onArticleTapped,
                     favorites,
                     onToggleFavorite
                 )
             }
         }
-        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
-            item {
-                PostListPopularSection(
-                    postsFeed.popularPosts, onArticleTapped
-                )
-            }
-        }
-        if (postsFeed.recentPosts.isNotEmpty()) {
-            item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
-        }
+//        item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
+//        if (postsFeed.recommendedPosts.isNotEmpty()) {
+//            item {
+//                PostListSimpleSection(
+//                    postsFeed.recommendedPosts,
+//                    onArticleTapped,
+//                    favorites,
+//                    onToggleFavorite
+//                )
+//            }
+//        }
+//        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
+//            item {
+//                PostListPopularSection(
+//                    postsFeed.popularPosts, onArticleTapped
+//                )
+//            }
+//        }
+//        if (postsFeed.recentPosts.isNotEmpty()) {
+//            item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
+//        }
     }
 }
 
@@ -478,10 +489,10 @@ private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) 
         text = stringResource(id = R.string.home_top_section_title),
         style = MaterialTheme.typography.subtitle1
     )
-    PostCardTop(
-        post = post,
-        modifier = Modifier.clickable(onClick = { navigateToArticle(post.id) })
-    )
+//    PostCardTop(
+//        post = post,
+//        modifier = Modifier.clickable(onClick = { navigateToArticle(post.id) })
+//    )
     PostListDivider()
 }
 

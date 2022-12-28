@@ -34,10 +34,11 @@
     <!-- Home Screen -->
     <string name="home_title">Home</string>
     <string name="home_tap_to_load_content">Tap to load content</string>
-    <string name="home_top_section_title">Top stories for you</string>
+    <string name="home_top_section_title">Hackers Event</string>
     <string name="home_popular_section_title">Popular on Hacknews</string>
     <string name="home_post_min_read">%1$s - %2$d min read</string>
     <string name="home_post_based_on_history">BASED ON YOUR HISTORY</string>
+    <string name="home_post_event_date">開催日：%1$s</string>
     <string name="home_search">Search articles</string>
 
     <!-- Article Screen -->

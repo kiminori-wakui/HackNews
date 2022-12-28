@@ -16,7 +16,11 @@
 
 package com.example.hacknews.ui.home
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -24,28 +28,21 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.hacknews.R
-import com.example.hacknews.data.Result
 import com.example.hacknews.data.interests.MySingleton
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.data.posts.impl.*
 import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Post
+import com.example.hacknews.model.PostAuthor
 import com.example.hacknews.model.PostsFeed
 import com.example.hacknews.utils.ErrorMessage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONException
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.net.URL
-import java.util.UUID
+import java.text.SimpleDateFormat
 
 /**
  * UI state for the Home route.
@@ -153,9 +150,7 @@ class HomeViewModel(
 
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
-            val url = "https://connpass.com/api/v1/event/"
-//            weatherBackgroundTask(url)
-            requestWebApi(url)
+            requestConnpassWebApi()
 
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
@@ -163,31 +158,28 @@ class HomeViewModel(
         }
     }
 
-    fun requestWebApi(url: String) {
+    private fun requestConnpassWebApi() {
         val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.GET, url, null,
+            Request.Method.GET, WEB_API_KEY_CONNPASS, null,
             Response.Listener { response ->
-                val text = response.toString()
-                val events = response.getJSONArray("events")
-//                for (i in 0 until jsonArray.length()) {
-//                    val employee = jsonArray.getJSONObject(i)
-//                    val firstName = employee.getString("firstname")
-//                    val age = employee.getInt("age")
-//                    val mail = employee.getString("mail")
-//                }
                 val posts = mutableListOf<Post>()
+                val events = response.getJSONArray("events")
                 for (i in 0 until events.length()) {
-                    val title = events.getJSONObject(i).getString("title")
+                    val event = events.getJSONObject(i)
+                    val title = event.getString("title")
+                    val startedAt = event.getString("started_at")
+                    val date = parseEventDate(startedAt)
+                    val url = event.getString("event_url")
                     posts.add(
                         Post(
                             id = "84eb677660d9",
                             title = title,
                             subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
-                            url = "https://medium.com/androiddevelopers/locale-changes-and-the-androidviewmodel-antipattern-84eb677660d9",
+                            url = url,
                             publication = publication,
                             metadata = Metadata(
-                                author = jose,
-                                date = "April 02",
+                                author = PostAuthor(name = date),
+                                date = date,
                                 readTimeMinutes = 1
                             ),
                             paragraphs = paragraphsPost4,
@@ -197,21 +189,26 @@ class HomeViewModel(
                     )
                 }
                 viewModelState.update {
+                    val postsFeed = it.postsFeed ?: PostsFeed(
+                        highlightedPost = post4,
+                        recentPosts = listOf(
+                            post3.copy(id = "post8"),
+                            post4.copy(id = "post9"),
+                            post5.copy(id = "post10")
+                        ),
+                        recentEvents = listOf(
+                            post5,
+                            post1.copy(id = "post6"),
+                            post2.copy(id = "post7")
+                        )
+                    )
                     it.copy(
                         postsFeed = PostsFeed(
-                            highlightedPost = post4,
-                            recommendedPosts = posts,
-                            popularPosts = listOf(
-                                post5,
-                                post1.copy(id = "post6"),
-                                post2.copy(id = "post7")
-                            ),
-                            recentPosts = listOf(
-                                post3.copy(id = "post8"),
-                                post4.copy(id = "post9"),
-                                post5.copy(id = "post10")
-                            )
+                            highlightedPost = postsFeed.highlightedPost,
+                            recentPosts = postsFeed.recentPosts,
+                            recentEvents = posts
                         ),
+                        isLoading = false
                     )
                 }
             },
@@ -223,33 +220,13 @@ class HomeViewModel(
         MySingleton.getInstance(context = context).addToRequestQueue(jsonObjectRequest)
     }
 
-    //３）HTTP通信（ワーカースレッド）の中身(※suspend＝中断する可能性がある関数につける)
-    private suspend fun weatherBackgroundTask(weatherUrl:String):String{
-        //withContext=スレッドを分離しますよ、Dispatchers.IO＝ワーカースレッド
-        val response = withContext(Dispatchers.IO){
-            // 天気情報サービスから取得した結果情報（JSON文字列）を後で入れるための変数（いったん空っぽ）を用意。
-            var httpResult = ""
-
-            //  try{エラーがあるかもしれない処理を実行}catch{実際エラーがあった場合}
-            try{
-                //ただのURL文字列をURLオブジェクトに変換（文字列にリンクを付けるイメージ）
-                val urlObj = URL(weatherUrl)
-
-                // アクセスしたAPIから情報を取得
-                //テキストファイルを読み込むクラス(文字コードを読めるようにする準備(URLオブジェクト))
-                val br = BufferedReader(InputStreamReader(urlObj.openStream()))
-                httpResult = br.readText()
-                httpResult = br.readText()
-            }catch (e: IOException){//IOExceptionとは例外管理するクラス
-                e.printStackTrace() //エラーが発生したよって言う
-            }catch (e: JSONException){ //JSONデータ構造に問題が発生した場合の例外
-                e.printStackTrace()
-            }
-            //HTTP接続の結果、取得したJSON文字列httpResultを戻り値とする
-            return@withContext httpResult
-        }
-
-        return response
+    @SuppressLint("SimpleDateFormat", "NewApi")
+    private fun parseEventDate(startedAt: String?): String {
+        startedAt ?: return ""
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
+        val dt = df.parse(startedAt)
+        val df2 = SimpleDateFormat("M/d")
+        return df2.format(dt)
     }
 
     /**
@@ -257,23 +234,23 @@ class HomeViewModel(
      */
     fun refreshPosts() {
         // Ui state is refreshing
-        viewModelState.update { it.copy(isLoading = true) }
-
-        viewModelScope.launch {
-            val result = postsRepository.getPostsFeed()
-            viewModelState.update {
-                when (result) {
-                    is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
-                    is Result.Error -> {
-                        val errorMessages = it.errorMessages + ErrorMessage(
-                            id = UUID.randomUUID().mostSignificantBits,
-                            messageId = R.string.load_error
-                        )
-                        it.copy(errorMessages = errorMessages, isLoading = false)
-                    }
-                }
-            }
-        }
+//        viewModelState.update { it.copy(isLoading = true) }
+//
+//        viewModelScope.launch {
+//            val result = postsRepository.getPostsFeed()
+//            viewModelState.update {
+//                when (result) {
+//                    is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
+//                    is Result.Error -> {
+//                        val errorMessages = it.errorMessages + ErrorMessage(
+//                            id = UUID.randomUUID().mostSignificantBits,
+//                            messageId = R.string.load_error
+//                        )
+//                        it.copy(errorMessages = errorMessages, isLoading = false)
+//                    }
+//                }
+//            }
+//        }
     }
 
     /**
@@ -288,9 +265,11 @@ class HomeViewModel(
     /**
      * Selects the given article to view more information about it.
      */
-    fun selectArticle(postId: String) {
+    fun selectArticle(url: String) {
         // Treat selecting a detail as simply interacting with it
-        interactedWithArticleDetails(postId)
+//        interactedWithArticleDetails(postId)
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(context, intent, null)
     }
 
     /**
@@ -337,6 +316,8 @@ class HomeViewModel(
      * Factory for HomeViewModel that takes PostsRepository as a dependency
      */
     companion object {
+        private const val WEB_API_KEY_CONNPASS = "https://connpass.com/api/v1/event/"
+
         fun provideFactory(
             postsRepository: PostsRepository,
             context: Context

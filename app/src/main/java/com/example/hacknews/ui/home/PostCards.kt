@@ -77,6 +77,26 @@ fun AuthorAndReadTime(
 }
 
 @Composable
+fun EventDate(
+    post: Post,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier) {
+        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+            Text(
+                text = stringResource(
+                    id = R.string.home_post_event_date,
+                    formatArgs = arrayOf(
+                        post.metadata.author.name
+                    )
+                ),
+                style = MaterialTheme.typography.body2
+            )
+        }
+    }
+}
+
+@Composable
 fun PostImage(post: Post, modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(post.imageThumbId),
@@ -141,7 +161,7 @@ fun PostCardSimple(
     val bookmarkAction = stringResource(if (isFavorite) R.string.unbookmark else R.string.bookmark)
     Row(
         modifier = Modifier
-            .clickable(onClick = { navigateToArticle(post.id) })
+            .clickable(onClick = { navigateToArticle(post.url) })
             .padding(16.dp)
             .semantics {
                 // By defining a custom action, we tell accessibility services that this whole
@@ -157,7 +177,7 @@ fun PostCardSimple(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             PostTitle(post)
-            AuthorAndReadTime(post)
+            EventDate(post)
         }
     }
 }
