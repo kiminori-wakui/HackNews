@@ -39,18 +39,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.example.hacknews.R
-import com.example.hacknews.data.posts.impl.post1
-import com.example.hacknews.data.posts.impl.post2
-import com.example.hacknews.data.posts.impl.post3
-import com.example.hacknews.data.posts.impl.post4
-import com.example.hacknews.data.posts.impl.post5
-import com.example.hacknews.model.Post
+import com.example.hacknews.data.posts.impl.item1
+import com.example.hacknews.data.posts.impl.item2
+import com.example.hacknews.data.posts.impl.item3
+import com.example.hacknews.data.posts.impl.item4
+import com.example.hacknews.data.posts.impl.item5
+import com.example.hacknews.model.Item
 import com.example.hacknews.model.PostAuthor
 import com.example.hacknews.ui.theme.HacknewsTheme
 
 @Composable
 fun PostCardPopular(
-    post: Post,
+    item: Item,
     navigateToArticle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -58,10 +58,10 @@ fun PostCardPopular(
         shape = MaterialTheme.shapes.medium,
         modifier = modifier.size(280.dp, 240.dp)
     ) {
-        Column(modifier = Modifier.clickable(onClick = { navigateToArticle(post.id) })) {
+        Column(modifier = Modifier.clickable(onClick = { navigateToArticle(item.id) })) {
 
             Image(
-                painter = painterResource(post.imageId),
+                painter = painterResource(item.imageId),
                 contentDescription = null, // decorative
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -71,13 +71,13 @@ fun PostCardPopular(
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = post.title,
+                    text = item.title,
                     style = MaterialTheme.typography.h6,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = post.metadata.author.name,
+                    text = item.metadata.author.name,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.body2
@@ -87,8 +87,8 @@ fun PostCardPopular(
                     text = stringResource(
                         id = R.string.home_post_min_read,
                         formatArgs = arrayOf(
-                            post.metadata.date,
-                            post.metadata.readTimeMinutes
+                            item.metadata.date,
+                            item.metadata.readTimeMinutes
                         )
                     ),
                     style = MaterialTheme.typography.body2
@@ -102,11 +102,11 @@ fun PostCardPopular(
 @Preview("Dark colors", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewPostCardPopular(
-    @PreviewParameter(PostPreviewParameterProvider::class, limit = 1) post: Post
+    @PreviewParameter(PostPreviewParameterProvider::class, limit = 1) item: Item
 ) {
     HacknewsTheme {
         Surface {
-            PostCardPopular(post, {})
+            PostCardPopular(item, {})
         }
     }
 }
@@ -114,7 +114,7 @@ fun PreviewPostCardPopular(
 @Preview("Regular colors, long text")
 @Composable
 fun PreviewPostCardPopularLongText(
-    @PreviewParameter(PostPreviewParameterProvider::class, limit = 1) post: Post
+    @PreviewParameter(PostPreviewParameterProvider::class, limit = 1) item: Item
 ) {
     val loremIpsum =
         """
@@ -128,9 +128,9 @@ fun PreviewPostCardPopularLongText(
     HacknewsTheme {
         Surface {
             PostCardPopular(
-                post.copy(
+                item.copy(
                     title = "Title$loremIpsum",
-                    metadata = post.metadata.copy(
+                    metadata = item.metadata.copy(
                         author = PostAuthor("Author: $loremIpsum"),
                         readTimeMinutes = Int.MAX_VALUE
                     )
@@ -142,7 +142,7 @@ fun PreviewPostCardPopularLongText(
 }
 
 /**
- * Provides sample [Post] instances for Composable Previews.
+ * Provides sample [Item] instances for Composable Previews.
  *
  * When creating a Composable Preview using @Preview, you can pass sample data
  * by annotating a parameter with @PreviewParameter:
@@ -159,8 +159,8 @@ fun PreviewPostCardPopularLongText(
  * would be more complex - e.g. retrieving the posts from a server - this would
  * be the right place to instantiate dummy instances.
  */
-class PostPreviewParameterProvider : PreviewParameterProvider<Post> {
+class PostPreviewParameterProvider : PreviewParameterProvider<Item> {
     override val values = sequenceOf(
-        post1, post2, post3, post4, post5
+        item1, item2, item3, item4, item5
     )
 }

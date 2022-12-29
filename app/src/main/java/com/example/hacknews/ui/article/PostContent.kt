@@ -71,20 +71,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.hacknews.R
-import com.example.hacknews.data.posts.impl.post3
+import com.example.hacknews.data.posts.impl.item3
 import com.example.hacknews.model.Markup
 import com.example.hacknews.model.MarkupType
 import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Paragraph
 import com.example.hacknews.model.ParagraphType
-import com.example.hacknews.model.Post
+import com.example.hacknews.model.Item
 import com.example.hacknews.ui.theme.HacknewsTheme
 
 private val defaultSpacerSize = 16.dp
 
 @Composable
 fun PostContent(
-    post: Post,
+    item: Item,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState()
 ) {
@@ -92,20 +92,20 @@ fun PostContent(
         modifier = modifier.padding(horizontal = defaultSpacerSize),
         state = state,
     ) {
-        postContentItems(post)
+        postContentItems(item)
     }
 }
 
-fun LazyListScope.postContentItems(post: Post) {
+fun LazyListScope.postContentItems(item: Item) {
     item {
         Spacer(Modifier.height(defaultSpacerSize))
-        PostHeaderImage(post)
+        PostHeaderImage(item)
     }
     item {
-        Text(text = post.title, style = MaterialTheme.typography.h4)
+        Text(text = item.title, style = MaterialTheme.typography.h4)
         Spacer(Modifier.height(8.dp))
     }
-    post.subtitle?.let { subtitle ->
+    item.subtitle?.let { subtitle ->
         item {
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
@@ -118,10 +118,10 @@ fun LazyListScope.postContentItems(post: Post) {
         }
     }
     item {
-        PostMetadata(post.metadata)
+        PostMetadata(item.metadata)
         Spacer(Modifier.height(24.dp))
     }
-    items(post.paragraphs) {
+    items(item.paragraphs) {
         Paragraph(paragraph = it)
     }
     item {
@@ -130,13 +130,13 @@ fun LazyListScope.postContentItems(post: Post) {
 }
 
 @Composable
-private fun PostHeaderImage(post: Post) {
+private fun PostHeaderImage(item: Item) {
     val imageModifier = Modifier
         .heightIn(min = 180.dp)
         .fillMaxWidth()
         .clip(shape = MaterialTheme.shapes.medium)
     Image(
-        painter = painterResource(post.imageId),
+        painter = painterResource(item.imageId),
         contentDescription = null, // decorative
         modifier = imageModifier,
         contentScale = ContentScale.Crop
@@ -369,7 +369,7 @@ private val Colors.codeBlockBackground: Color
 fun PreviewPost() {
     HacknewsTheme {
         Surface {
-            PostContent(post = post3)
+            PostContent(item = item3)
         }
     }
 }

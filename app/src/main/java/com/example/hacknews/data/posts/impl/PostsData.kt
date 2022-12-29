@@ -22,9 +22,9 @@ import com.example.hacknews.model.MarkupType
 import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Paragraph
 import com.example.hacknews.model.ParagraphType
-import com.example.hacknews.model.Post
+import com.example.hacknews.model.Item
 import com.example.hacknews.model.PostAuthor
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.model.Publication
 
 /**
@@ -933,7 +933,7 @@ val paragraphsPost5 = listOf(
     )
 )
 
-val post1 = Post(
+val item1 = Item(
     id = "dc523f0ed25c",
     title = "A Little Thing about Android Module Paths",
     subtitle = "How to configure your module paths, instead of using Gradle’s default.",
@@ -949,7 +949,7 @@ val post1 = Post(
     imageThumbId = R.drawable.post_1_thumb
 )
 
-val post2 = Post(
+val item2 = Item(
     id = "7446d8dfd7dc",
     title = "Dagger in Kotlin: Gotchas and Optimizations",
     subtitle = "Use Dagger in Kotlin! This article includes best practices to optimize your build time and gotchas you might encounter.",
@@ -965,7 +965,7 @@ val post2 = Post(
     imageThumbId = R.drawable.post_2_thumb
 )
 
-val post3 = Post(
+val item3 = Item(
     id = "ac552dcc1741",
     title = "From Java Programming Language to Kotlin — the idiomatic way",
     subtitle = "Learn how to get started converting Java Programming Language code to Kotlin, making it more idiomatic and avoid common pitfalls, by…",
@@ -981,7 +981,7 @@ val post3 = Post(
     imageThumbId = R.drawable.post_3_thumb
 )
 
-val post4 = Post(
+val item4 = Item(
     id = "84eb677660d9",
     title = "Locale changes and the AndroidViewModel antipattern",
     subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
@@ -997,7 +997,7 @@ val post4 = Post(
     imageThumbId = R.drawable.post_4_thumb
 )
 
-val post5 = Post(
+val item5 = Item(
     id = "55db18283aca",
     title = "Collections and sequences in Kotlin",
     subtitle = "Working with collections is a common task and the Kotlin Standard Library offers many great utility functions. It also offers two ways of…",
@@ -1013,17 +1013,17 @@ val post5 = Post(
     imageThumbId = R.drawable.post_5_thumb
 )
 
-val posts: PostsFeed =
-    PostsFeed(
-        highlightedPost = post4,
+val posts: ItemsFeed =
+    ItemsFeed(
+        highlightedItem = item4,
         recentPosts = listOf(
-            post3.copy(id = "post8"),
-            post4.copy(id = "post9"),
-            post5.copy(id = "post10")
+            item3.copy(id = "post8"),
+            item4.copy(id = "post9"),
+            item5.copy(id = "post10")
         ),
         recentEvents = listOf(
-            post5,
-            post1.copy(id = "post6"),
-            post2.copy(id = "post7")
+            item5,
+            item1.copy(id = "post6"),
+            item2.copy(id = "post7")
         )
     )

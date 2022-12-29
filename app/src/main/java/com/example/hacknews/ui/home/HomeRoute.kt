@@ -100,7 +100,7 @@ fun HomeRoute(
     // we get to preserve the scroll throughout any changes to the content.
     val homeListLazyListState = rememberLazyListState()
     val articleDetailLazyListStates = when (uiState) {
-        is HomeUiState.HasPosts -> uiState.postsFeed.allPosts
+        is HomeUiState.HasPosts -> uiState.postsFeed.allItems
         is HomeUiState.NoPosts -> emptyList()
     }.associate { post ->
         key(post.id) {
@@ -146,15 +146,15 @@ fun HomeRoute(
             check(uiState is HomeUiState.HasPosts)
 
             ArticleScreen(
-                post = uiState.selectedPost,
+                item = uiState.selectedItem,
                 isExpandedScreen = isExpandedScreen,
                 onBack = onInteractWithFeed,
-                isFavorite = uiState.favorites.contains(uiState.selectedPost.id),
+                isFavorite = uiState.favorites.contains(uiState.selectedItem.id),
                 onToggleFavorite = {
-                    onToggleFavorite(uiState.selectedPost.id)
+                    onToggleFavorite(uiState.selectedItem.id)
                 },
                 lazyListState = articleDetailLazyListStates.getValue(
-                    uiState.selectedPost.id
+                    uiState.selectedItem.id
                 )
             )
 

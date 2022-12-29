@@ -65,8 +65,8 @@ import androidx.compose.ui.unit.dp
 import com.example.hacknews.R
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.impl.BlockingFakePostsRepository
-import com.example.hacknews.data.posts.impl.post3
-import com.example.hacknews.model.Post
+import com.example.hacknews.data.posts.impl.item3
+import com.example.hacknews.model.Item
 import com.example.hacknews.ui.theme.HacknewsTheme
 import com.example.hacknews.ui.utils.BookmarkButton
 import com.example.hacknews.ui.utils.FavoriteButton
@@ -78,7 +78,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * Stateless Article Screen that displays a single post adapting the UI to different screen sizes.
  *
- * @param post (state) item to display
+ * @param item (state) item to display
  * @param showNavigationIcon (state) if the navigation icon should be shown
  * @param onBack (event) request navigate back
  * @param isFavorite (state) is this item currently a favorite
@@ -87,7 +87,7 @@ import kotlinx.coroutines.runBlocking
  */
 @Composable
 fun ArticleScreen(
-    post: Post,
+    item: Item,
     isExpandedScreen: Boolean,
     onBack: () -> Unit,
     isFavorite: Boolean,
@@ -103,7 +103,7 @@ fun ArticleScreen(
     Row(modifier.fillMaxSize()) {
         val context = LocalContext.current
         ArticleScreenContent(
-            post = post,
+            item = item,
             // Allow opening the Drawer if the screen is not expanded
             navigationIconContent = if (!isExpandedScreen) {
                 {
@@ -125,7 +125,7 @@ fun ArticleScreen(
                         onUnimplementedAction = { showUnimplementedActionDialog = true },
                         isFavorite = isFavorite,
                         onToggleFavorite = onToggleFavorite,
-                        onSharePost = { sharePost(post, context) },
+                        onSharePost = { sharePost(item, context) },
                     )
                 }
             } else {
@@ -139,13 +139,13 @@ fun ArticleScreen(
 /**
  * Stateless Article Screen that displays a single post.
  *
- * @param post (state) item to display
+ * @param item (state) item to display
  * @param navigationIconContent (UI) content to show for the navigation icon
  * @param bottomBarContent (UI) content to show for the bottom bar
  */
 @Composable
 private fun ArticleScreenContent(
-    post: Post,
+    item: Item,
     navigationIconContent: @Composable (() -> Unit)? = null,
     bottomBarContent: @Composable () -> Unit = { },
     lazyListState: LazyListState = rememberLazyListState()
@@ -167,7 +167,7 @@ private fun ArticleScreenContent(
                                 .size(36.dp)
                         )
                         Text(
-                            text = stringResource(id = R.string.published_in, post.publication?.name ?: ""),
+                            text = stringResource(id = R.string.published_in, item.publication?.name ?: ""),
                             style = MaterialTheme.typography.subtitle2,
                             color = LocalContentColor.current,
                             modifier = Modifier
@@ -184,7 +184,7 @@ private fun ArticleScreenContent(
         bottomBar = bottomBarContent
     ) { innerPadding ->
         PostContent(
-            post = post,
+            item = item,
             modifier = Modifier
                 // innerPadding takes into account the top and bottom bar
                 .padding(innerPadding),
@@ -252,14 +252,14 @@ private fun FunctionalityNotAvailablePopup(onDismiss: () -> Unit) {
 /**
  * Show a share sheet for a post
  *
- * @param post to share
+ * @param item to share
  * @param context Android context to show the share sheet in
  */
-fun sharePost(post: Post, context: Context) {
+fun sharePost(item: Item, context: Context) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TITLE, post.title)
-        putExtra(Intent.EXTRA_TEXT, post.url)
+        putExtra(Intent.EXTRA_TITLE, item.title)
+        putExtra(Intent.EXTRA_TEXT, item.url)
     }
     context.startActivity(Intent.createChooser(intent, context.getString(R.string.article_share_post)))
 }
@@ -271,7 +271,7 @@ fun sharePost(post: Post, context: Context) {
 fun PreviewArticleDrawer() {
     HacknewsTheme {
         val post = runBlocking {
-            (BlockingFakePostsRepository().getPost(post3.id) as Result.Success).data
+            (BlockingFakePostsRepository().getPost(item3.id) as Result.Success).data
         }
         ArticleScreen(post, false, {}, false, {})
     }
@@ -288,7 +288,7 @@ fun PreviewArticleDrawer() {
 fun PreviewArticleNavRail() {
     HacknewsTheme {
         val post = runBlocking {
-            (BlockingFakePostsRepository().getPost(post3.id) as Result.Success).data
+            (BlockingFakePostsRepository().getPost(item3.id) as Result.Success).data
         }
         ArticleScreen(post, true, {}, false, {})
     }

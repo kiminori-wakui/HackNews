@@ -17,8 +17,8 @@
 package com.example.hacknews.data.posts
 
 import com.example.hacknews.data.Result
-import com.example.hacknews.model.Post
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.Item
+import com.example.hacknews.model.ItemsFeed
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -29,12 +29,12 @@ interface PostsRepository {
     /**
      * Get a specific HackNews post.
      */
-    suspend fun getPost(postId: String?): Result<Post>
+    suspend fun getPost(postId: String?): Result<Item>
 
     /**
      * Get HackNews posts.
      */
-    suspend fun getPostsFeed(): Result<PostsFeed>
+    suspend fun getPostsFeed(): Result<ItemsFeed>
 
     /**
      * Observe the current favorites

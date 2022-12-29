@@ -136,6 +136,8 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.0"
+
+    implementation("io.coil-kt:coil-compose:2.2.2")
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

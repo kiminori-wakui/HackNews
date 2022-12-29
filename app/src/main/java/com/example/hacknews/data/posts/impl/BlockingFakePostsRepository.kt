@@ -18,8 +18,8 @@ package com.example.hacknews.data.posts.impl
 
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.PostsRepository
-import com.example.hacknews.model.Post
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.Item
+import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.utils.addOrRemove
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,9 +37,9 @@ class BlockingFakePostsRepository : PostsRepository {
     // for now, keep the favorites in memory
     private val favorites = MutableStateFlow<Set<String>>(setOf())
 
-    override suspend fun getPost(postId: String?): Result<Post> {
+    override suspend fun getPost(postId: String?): Result<Item> {
         return withContext(Dispatchers.IO) {
-            val post = posts.allPosts.find { it.id == postId }
+            val post = posts.allItems.find { it.id == postId }
             if (post == null) {
                 Result.Error(IllegalArgumentException("Unable to find post"))
             } else {
@@ -48,7 +48,7 @@ class BlockingFakePostsRepository : PostsRepository {
         }
     }
 
-    override suspend fun getPostsFeed(): Result<PostsFeed> {
+    override suspend fun getPostsFeed(): Result<ItemsFeed> {
         return Result.Success(posts)
     }
 

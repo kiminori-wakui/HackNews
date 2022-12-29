@@ -39,12 +39,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hacknews.R
 import com.example.hacknews.data.posts.impl.posts
-import com.example.hacknews.model.Post
+import com.example.hacknews.model.Item
 import com.example.hacknews.ui.theme.HacknewsTheme
 import com.example.hacknews.utils.CompletePreviews
 
 @Composable
-fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
+fun PostCardTop(item: Item, modifier: Modifier = Modifier) {
     // TUTORIAL CONTENT STARTS HERE
     val typography = MaterialTheme.typography
     Column(
@@ -57,7 +57,7 @@ fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .clip(shape = MaterialTheme.shapes.medium)
         Image(
-            painter = painterResource(post.imageId),
+            painter = painterResource(item.imageId),
             contentDescription = null, // decorative
             modifier = imageModifier,
             contentScale = ContentScale.Crop
@@ -65,12 +65,12 @@ fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = post.title,
+            text = item.title,
             style = typography.h6,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Text(
-            text = post.metadata.author.name,
+            text = item.metadata.author.name,
             style = typography.subtitle2,
             modifier = Modifier.padding(bottom = 4.dp)
         )
@@ -80,8 +80,8 @@ fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
                 text = stringResource(
                     id = R.string.home_post_min_read,
                     formatArgs = arrayOf(
-                        post.metadata.date,
-                        post.metadata.readTimeMinutes
+                        item.metadata.date,
+                        item.metadata.readTimeMinutes
                     )
                 ),
                 style = typography.subtitle2
@@ -101,7 +101,7 @@ fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
 fun PostCardTopPreview() {
     HacknewsTheme {
         Surface {
-            PostCardTop(posts.highlightedPost)
+            PostCardTop(posts.highlightedItem)
         }
     }
 }
@@ -117,7 +117,7 @@ fun PostCardTopPreview() {
 fun PostCardTopPreviews() {
     HacknewsTheme {
         Surface {
-            PostCardTop(posts.highlightedPost)
+            PostCardTop(posts.highlightedItem)
         }
     }
 }

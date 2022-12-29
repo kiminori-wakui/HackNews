@@ -22,7 +22,6 @@ import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,8 +36,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -93,8 +90,8 @@ import androidx.compose.ui.unit.dp
 import com.example.hacknews.R
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.impl.BlockingFakePostsRepository
-import com.example.hacknews.model.Post
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.Item
+import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.ui.article.postContentItems
 import com.example.hacknews.ui.article.sharePost
 import com.example.hacknews.ui.components.HacknewsSnackbarHost
@@ -161,7 +158,7 @@ fun HomeFeedWithArticleDetailsScreen(
                 onSearchInputChanged = onSearchInputChanged,
             )
             // Crossfade between different detail posts
-            Crossfade(targetState = hasPostsUiState.selectedPost) { detailPost ->
+            Crossfade(targetState = hasPostsUiState.selectedItem) { detailPost ->
                 // Get the lazy list state for this detail view
                 val detailLazyListState by derivedStateOf {
                     articleDetailLazyListStates.getValue(detailPost.id)
@@ -402,7 +399,7 @@ private fun LoadingContent(
  */
 @Composable
 private fun PostList(
-    postsFeed: PostsFeed,
+    postsFeed: ItemsFeed,
     favorites: Set<String>,
     showExpandedSearch: Boolean,
     onArticleTapped: (postId: String) -> Unit,
@@ -427,10 +424,21 @@ private fun PostList(
                 )
             }
         }
-        item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
+        item { PostListTopSection(postsFeed.highlightedItem, onArticleTapped) }
+        if (postsFeed.recentPosts.isNotEmpty()) {
+            item {
+                PostListSection(
+                    postsFeed.recentPosts,
+                    onArticleTapped,
+                    favorites,
+                    onToggleFavorite
+                )
+            }
+        }
+        item { EventListTopSection() }
         if (postsFeed.recentEvents.isNotEmpty()) {
             item {
-                PostListSimpleSection(
+                EventListSimpleSection(
                     postsFeed.recentEvents,
                     onArticleTapped,
                     favorites,
@@ -438,17 +446,6 @@ private fun PostList(
                 )
             }
         }
-//        item { PostListTopSection(postsFeed.highlightedPost, onArticleTapped) }
-//        if (postsFeed.recommendedPosts.isNotEmpty()) {
-//            item {
-//                PostListSimpleSection(
-//                    postsFeed.recommendedPosts,
-//                    onArticleTapped,
-//                    favorites,
-//                    onToggleFavorite
-//                )
-//            }
-//        }
 //        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
 //            item {
 //                PostListPopularSection(
@@ -479,14 +476,14 @@ private fun FullScreenLoading() {
 /**
  * Top section of [PostList]
  *
- * @param post (state) highlighted post to display
+ * @param item (state) highlighted post to display
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
-private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) {
+private fun PostListTopSection(item: Item, navigateToArticle: (String) -> Unit) {
     Text(
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        text = stringResource(id = R.string.home_top_section_title),
+        text = stringResource(id = R.string.home_hackers_post_section_title),
         style = MaterialTheme.typography.subtitle1
     )
 //    PostCardTop(
@@ -497,22 +494,35 @@ private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) 
 }
 
 /**
+ * Top section of [EventList]
+ */
+@Composable
+private fun EventListTopSection() {
+    Text(
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
+        text = stringResource(id = R.string.home_hackers_event_section_title),
+        style = MaterialTheme.typography.subtitle1
+    )
+    PostListDivider()
+}
+
+/**
  * Full-width list items for [PostList]
  *
- * @param posts (state) to display
+ * @param items (state) to display
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
-private fun PostListSimpleSection(
-    posts: List<Post>,
+private fun PostListSection(
+    items: List<Item>,
     navigateToArticle: (String) -> Unit,
     favorites: Set<String>,
     onToggleFavorite: (String) -> Unit
 ) {
     Column {
-        posts.forEach { post ->
-            PostCardSimple(
-                post = post,
+        items.forEach { post ->
+            PostCard(
+                item = post,
                 navigateToArticle = navigateToArticle,
                 isFavorite = favorites.contains(post.id),
                 onToggleFavorite = { onToggleFavorite(post.id) }
@@ -523,14 +533,40 @@ private fun PostListSimpleSection(
 }
 
 /**
+ * Full-width list items for [PostList]
+ *
+ * @param events (state) to display
+ * @param navigateToArticle (event) request navigation to Article screen
+ */
+@Composable
+private fun EventListSimpleSection(
+    events: List<Item>,
+    navigateToArticle: (String) -> Unit,
+    favorites: Set<String>,
+    onToggleFavorite: (String) -> Unit
+) {
+    Column {
+        events.forEach { event ->
+            EventCardSimple(
+                item = event,
+                navigateToArticle = navigateToArticle,
+                isFavorite = favorites.contains(event.id),
+                onToggleFavorite = { onToggleFavorite(event.id) }
+            )
+            PostListDivider()
+        }
+    }
+}
+
+/**
  * Horizontal scrolling cards for [PostList]
  *
- * @param posts (state) to display
+ * @param items (state) to display
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
 private fun PostListPopularSection(
-    posts: List<Post>,
+    posts: List<Item>,
     navigateToArticle: (String) -> Unit
 ) {
     Column {
@@ -540,15 +576,15 @@ private fun PostListPopularSection(
             style = MaterialTheme.typography.subtitle1
         )
 
-        LazyRow(modifier = Modifier.padding(end = 16.dp)) {
-            items(posts) { post ->
-                PostCardPopular(
-                    post,
-                    navigateToArticle,
-                    Modifier.padding(start = 16.dp, bottom = 16.dp)
-                )
-            }
-        }
+//        LazyRow(modifier = Modifier.padding(end = 16.dp)) {
+//            items(posts) { post ->
+//                PostCardPopular(
+//                    post,
+//                    navigateToArticle,
+//                    Modifier.padding(start = 16.dp, bottom = 16.dp)
+//                )
+//            }
+//        }
         PostListDivider()
     }
 }
@@ -556,16 +592,16 @@ private fun PostListPopularSection(
 /**
  * Full-width list items that display "based on your history" for [PostList]
  *
- * @param posts (state) to display
+ * @param items (state) to display
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
 private fun PostListHistorySection(
-    posts: List<Post>,
+    items: List<Item>,
     navigateToArticle: (String) -> Unit
 ) {
     Column {
-        posts.forEach { post ->
+        items.forEach { post ->
             PostCardHistory(post, navigateToArticle)
             PostListDivider()
         }
@@ -744,7 +780,7 @@ fun PreviewHomeListDrawerScreen() {
         HomeFeedScreen(
             uiState = HomeUiState.HasPosts(
                 postsFeed = postsFeed,
-                selectedPost = postsFeed.highlightedPost,
+                selectedItem = postsFeed.highlightedItem,
                 isArticleOpen = false,
                 favorites = emptySet(),
                 isLoading = false,
@@ -780,7 +816,7 @@ fun PreviewHomeListNavRailScreen() {
         HomeFeedScreen(
             uiState = HomeUiState.HasPosts(
                 postsFeed = postsFeed,
-                selectedPost = postsFeed.highlightedPost,
+                selectedItem = postsFeed.highlightedItem,
                 isArticleOpen = false,
                 favorites = emptySet(),
                 isLoading = false,
@@ -812,7 +848,7 @@ fun PreviewHomeListDetailScreen() {
         HomeFeedWithArticleDetailsScreen(
             uiState = HomeUiState.HasPosts(
                 postsFeed = postsFeed,
-                selectedPost = postsFeed.highlightedPost,
+                selectedItem = postsFeed.highlightedItem,
                 isArticleOpen = false,
                 favorites = emptySet(),
                 isLoading = false,
@@ -828,7 +864,7 @@ fun PreviewHomeListDetailScreen() {
             onInteractWithDetail = {},
             openDrawer = {},
             homeListLazyListState = rememberLazyListState(),
-            articleDetailLazyListStates = postsFeed.allPosts.associate { post ->
+            articleDetailLazyListStates = postsFeed.allItems.associate { post ->
                 key(post.id) {
                     post.id to rememberLazyListState()
                 }

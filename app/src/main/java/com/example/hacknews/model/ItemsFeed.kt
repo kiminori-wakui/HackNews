@@ -17,16 +17,16 @@
 package com.example.hacknews.model
 
 /**
- * A container of [Post]s, partitioned into different categories.
+ * A container of [Item]s, partitioned into different categories.
  */
-data class PostsFeed(
-    val highlightedPost: Post,
-    val recentPosts: List<Post>,
-    val recentEvents: List<Post>,
+data class ItemsFeed(
+    val highlightedItem: Item,
+    val recentPosts: List<Item>,
+    val recentEvents: List<Item>,
 ) {
     /**
      * Returns a flattened list of all posts contained in the feed.
      */
-    val allPosts: List<Post> =
-        listOf(highlightedPost) + recentPosts + recentEvents
+    val allItems: List<Item> =
+        listOf(highlightedItem) + recentPosts + recentEvents
 }

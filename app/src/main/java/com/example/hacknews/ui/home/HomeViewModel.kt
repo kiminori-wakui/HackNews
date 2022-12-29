@@ -26,15 +26,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.hacknews.R
 import com.example.hacknews.data.interests.MySingleton
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.data.posts.impl.*
 import com.example.hacknews.model.Metadata
-import com.example.hacknews.model.Post
+import com.example.hacknews.model.Item
 import com.example.hacknews.model.PostAuthor
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.utils.ErrorMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -71,11 +72,11 @@ sealed interface HomeUiState {
     /**
      * There are posts to render, as contained in [postsFeed].
      *
-     * There is guaranteed to be a [selectedPost], which is one of the posts from [postsFeed].
+     * There is guaranteed to be a [selectedItem], which is one of the posts from [postsFeed].
      */
     data class HasPosts(
-        val postsFeed: PostsFeed,
-        val selectedPost: Post,
+        val postsFeed: ItemsFeed,
+        val selectedItem: Item,
         val isArticleOpen: Boolean,
         val favorites: Set<String>,
         override val isLoading: Boolean,
@@ -88,7 +89,7 @@ sealed interface HomeUiState {
  * An internal representation of the Home route state, in a raw form
  */
 private data class HomeViewModelState(
-    val postsFeed: PostsFeed? = null,
+    val itemsFeed: ItemsFeed? = null,
     val selectedPostId: String? = null, // TODO back selectedPostId in a SavedStateHandle
     val isArticleOpen: Boolean = false,
     val favorites: Set<String> = emptySet(),
@@ -102,7 +103,7 @@ private data class HomeViewModelState(
      * the ui.
      */
     fun toUiState(): HomeUiState =
-        if (postsFeed == null) {
+        if (itemsFeed == null) {
             HomeUiState.NoPosts(
                 isLoading = isLoading,
                 errorMessages = errorMessages,
@@ -110,13 +111,13 @@ private data class HomeViewModelState(
             )
         } else {
             HomeUiState.HasPosts(
-                postsFeed = postsFeed,
+                postsFeed = itemsFeed,
                 // Determine the selected post. This will be the post the user last selected.
                 // If there is none (or that post isn't in the current feed), default to the
                 // highlighted post
-                selectedPost = postsFeed.allPosts.find {
+                selectedItem = itemsFeed.allItems.find {
                     it.id == selectedPostId
-                } ?: postsFeed.highlightedPost,
+                } ?: itemsFeed.highlightedItem,
                 isArticleOpen = isArticleOpen,
                 favorites = favorites,
                 isLoading = isLoading,
@@ -150,6 +151,7 @@ class HomeViewModel(
 
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
+            requestQiitaWebApi()
             requestConnpassWebApi()
 
             postsRepository.observeFavorites().collect { favorites ->
@@ -158,11 +160,74 @@ class HomeViewModel(
         }
     }
 
+    private fun requestQiitaWebApi() {
+        val jsonArrayRequest = JsonArrayRequest(
+            Request.Method.GET, WEB_API_KEY_QIITA, null,
+            Response.Listener { response ->
+                val items = mutableListOf<Item>()
+                for (i in 0 until response.length()) {
+                    val post = response.getJSONObject(i)
+                    val title = post.getString("title")
+                    val url = post.getString("url")
+                    val user = post.getJSONObject("user")
+                    val imageUrl = user.getString("profile_image_url")
+                    items.add(
+                        Item(
+                            id = "84eb677660d9",
+                            title = title,
+                            subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
+                            url = url,
+                            publication = publication,
+                            metadata = Metadata(
+                                author = PostAuthor(name = "name"),
+                                date = "date",
+                                readTimeMinutes = 1
+                            ),
+                            paragraphs = paragraphsPost4,
+                            imageUrl = imageUrl,
+                            imageId = R.drawable.post_4,
+                            imageThumbId = R.drawable.post_4_thumb
+                        )
+                    )
+                }
+                viewModelState.update {
+                    val itemsFeed = it.itemsFeed ?: ItemsFeed(
+                        highlightedItem = item4,
+                        recentPosts = listOf(
+                            item3.copy(id = "post8"),
+                            item4.copy(id = "post9"),
+                            item5.copy(id = "post10")
+                        ),
+                        recentEvents = listOf(
+                            item5,
+                            item1.copy(id = "post6"),
+                            item2.copy(id = "post7")
+                        )
+                    )
+                    it.copy(
+                        itemsFeed = ItemsFeed(
+                            highlightedItem = itemsFeed.highlightedItem,
+                            recentPosts = items,
+                            recentEvents = itemsFeed.recentEvents
+                        ),
+                        isLoading = false
+                    )
+                }
+            },
+            Response.ErrorListener { error ->
+                // TODO: Handle error
+                error.stackTrace
+            }
+        )
+        // Access the RequestQueue through your singleton class.
+        MySingleton.getInstance(context = context).addToRequestQueue(jsonArrayRequest)
+    }
+
     private fun requestConnpassWebApi() {
         val jsonObjectRequest = JsonObjectRequest(
             Request.Method.GET, WEB_API_KEY_CONNPASS, null,
             Response.Listener { response ->
-                val posts = mutableListOf<Post>()
+                val items = mutableListOf<Item>()
                 val events = response.getJSONArray("events")
                 for (i in 0 until events.length()) {
                     val event = events.getJSONObject(i)
@@ -170,8 +235,8 @@ class HomeViewModel(
                     val startedAt = event.getString("started_at")
                     val date = parseEventDate(startedAt)
                     val url = event.getString("event_url")
-                    posts.add(
-                        Post(
+                    items.add(
+                        Item(
                             id = "84eb677660d9",
                             title = title,
                             subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
@@ -189,24 +254,24 @@ class HomeViewModel(
                     )
                 }
                 viewModelState.update {
-                    val postsFeed = it.postsFeed ?: PostsFeed(
-                        highlightedPost = post4,
+                    val itemsFeed = it.itemsFeed ?: ItemsFeed(
+                        highlightedItem = item4,
                         recentPosts = listOf(
-                            post3.copy(id = "post8"),
-                            post4.copy(id = "post9"),
-                            post5.copy(id = "post10")
+                            item3.copy(id = "post8"),
+                            item4.copy(id = "post9"),
+                            item5.copy(id = "post10")
                         ),
                         recentEvents = listOf(
-                            post5,
-                            post1.copy(id = "post6"),
-                            post2.copy(id = "post7")
+                            item5,
+                            item1.copy(id = "post6"),
+                            item2.copy(id = "post7")
                         )
                     )
                     it.copy(
-                        postsFeed = PostsFeed(
-                            highlightedPost = postsFeed.highlightedPost,
-                            recentPosts = postsFeed.recentPosts,
-                            recentEvents = posts
+                        itemsFeed = ItemsFeed(
+                            highlightedItem = itemsFeed.highlightedItem,
+                            recentPosts = itemsFeed.recentPosts,
+                            recentEvents = items
                         ),
                         isLoading = false
                     )
@@ -317,6 +382,7 @@ class HomeViewModel(
      */
     companion object {
         private const val WEB_API_KEY_CONNPASS = "https://connpass.com/api/v1/event/"
+        private const val WEB_API_KEY_QIITA = "https://qiita.com/api/v2/items"
 
         fun provideFactory(
             postsRepository: PostsRepository,

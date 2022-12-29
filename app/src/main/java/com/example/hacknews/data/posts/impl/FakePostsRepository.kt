@@ -18,8 +18,8 @@ package com.example.hacknews.data.posts.impl
 
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.PostsRepository
-import com.example.hacknews.model.Post
-import com.example.hacknews.model.PostsFeed
+import com.example.hacknews.model.Item
+import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.utils.addOrRemove
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,9 +43,9 @@ class FakePostsRepository : PostsRepository {
     // Used to make suspend functions that read and update state safe to call from any thread
     private val mutex = Mutex()
 
-    override suspend fun getPost(postId: String?): Result<Post> {
+    override suspend fun getPost(postId: String?): Result<Item> {
         return withContext(Dispatchers.IO) {
-            val post = posts.allPosts.find { it.id == postId }
+            val post = posts.allItems.find { it.id == postId }
             if (post == null) {
                 Result.Error(IllegalArgumentException("Post not found"))
             } else {
@@ -54,7 +54,7 @@ class FakePostsRepository : PostsRepository {
         }
     }
 
-    override suspend fun getPostsFeed(): Result<PostsFeed> {
+    override suspend fun getPostsFeed(): Result<ItemsFeed> {
         return withContext(Dispatchers.IO) {
             delay(800) // pretend we're on a slow network
             if (shouldRandomlyFail()) {
