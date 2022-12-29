@@ -17,6 +17,7 @@
 package com.example.hacknews.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,7 +34,7 @@ import com.example.hacknews.ui.interests.InterestsViewModel
 @Composable
 fun HacknewsNavGraph(
     appContainer: AppContainer,
-    isExpandedScreen: Boolean,
+    isExpandedScreen: MutableState<Boolean>,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     openDrawer: () -> Unit = {},
@@ -64,7 +65,7 @@ fun HacknewsNavGraph(
             )
             InterestsRoute(
                 interestsViewModel = interestsViewModel,
-                isExpandedScreen = isExpandedScreen,
+                isExpandedScreen = isExpandedScreen.value,
                 openDrawer = openDrawer
             )
         }

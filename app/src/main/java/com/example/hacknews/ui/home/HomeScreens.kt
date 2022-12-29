@@ -60,14 +60,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -116,7 +109,7 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun HomeFeedWithArticleDetailsScreen(
     uiState: HomeUiState,
-    showTopAppBar: Boolean,
+    showTopAppBar: MutableState<Boolean>,
     onToggleFavorite: (String) -> Unit,
     onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
@@ -145,7 +138,7 @@ fun HomeFeedWithArticleDetailsScreen(
             PostList(
                 postsFeed = hasPostsUiState.postsFeed,
                 favorites = hasPostsUiState.favorites,
-                showExpandedSearch = !showTopAppBar,
+                showExpandedSearch = showTopAppBar,
                 onArticleTapped = onSelectPost,
                 onToggleFavorite = onToggleFavorite,
                 contentPadding = contentPadding,
@@ -218,7 +211,7 @@ private fun Modifier.notifyInput(block: () -> Unit): Modifier =
 @Composable
 fun HomeFeedScreen(
     uiState: HomeUiState,
-    showTopAppBar: Boolean,
+    showTopAppBar: MutableState<Boolean>,
     onToggleFavorite: (String) -> Unit,
     onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
@@ -243,11 +236,11 @@ fun HomeFeedScreen(
         PostList(
             postsFeed = hasPostsUiState.postsFeed,
             favorites = hasPostsUiState.favorites,
-            showExpandedSearch = !showTopAppBar,
+            showExpandedSearch = showTopAppBar,
             onArticleTapped = onSelectPost,
             onToggleFavorite = onToggleFavorite,
             contentPadding = rememberContentPaddingForScreen(
-                additionalTop = if (showTopAppBar) 0.dp else 8.dp
+                additionalTop = if (!showTopAppBar.value) 0.dp else 8.dp
             ),
             modifier = contentModifier,
             state = homeListLazyListState,
@@ -269,7 +262,7 @@ fun HomeFeedScreen(
 @Composable
 private fun HomeScreenWithList(
     uiState: HomeUiState,
-    showTopAppBar: Boolean,
+    showTopAppBar: MutableState<Boolean>,
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
@@ -285,9 +278,10 @@ private fun HomeScreenWithList(
         scaffoldState = scaffoldState,
         snackbarHost = { HacknewsSnackbarHost(hostState = it) },
         topBar = {
-            if (showTopAppBar) {
+            if (!showTopAppBar.value) {
                 HomeTopAppBar(
                     openDrawer = openDrawer,
+                    showTopAppBar = showTopAppBar,
                     elevation = if (!homeListLazyListState.isScrolled) 0.dp else 4.dp
                 )
             }
@@ -401,7 +395,7 @@ private fun LoadingContent(
 private fun PostList(
     postsFeed: ItemsFeed,
     favorites: Set<String>,
-    showExpandedSearch: Boolean,
+    showExpandedSearch: MutableState<Boolean>,
     onArticleTapped: (postId: String) -> Unit,
     onToggleFavorite: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -415,7 +409,7 @@ private fun PostList(
         contentPadding = contentPadding,
         state = state
     ) {
-        if (showExpandedSearch) {
+        if (showExpandedSearch.value) {
             item {
                 HomeSearch(
                     Modifier.padding(horizontal = 16.dp),
@@ -732,6 +726,7 @@ private fun PostTopBar(
 @Composable
 private fun HomeTopAppBar(
     elevation: Dp,
+    showTopAppBar: MutableState<Boolean>,
     openDrawer: () -> Unit
 ) {
     val title = stringResource(id = R.string.app_name)
@@ -756,7 +751,10 @@ private fun HomeTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: Open search */ }) {
+            IconButton(onClick = {
+            /* TODO: Open search */
+                showTopAppBar.value = true
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.cd_search)
@@ -776,6 +774,7 @@ fun PreviewHomeListDrawerScreen() {
     val postsFeed = runBlocking {
         (BlockingFakePostsRepository().getPostsFeed() as Result.Success).data
     }
+    val isExpandedScreen = remember { mutableStateOf(false) }
     HacknewsTheme {
         HomeFeedScreen(
             uiState = HomeUiState.HasPosts(
@@ -787,16 +786,15 @@ fun PreviewHomeListDrawerScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
-            showTopAppBar = false,
+            showTopAppBar = isExpandedScreen,
             onToggleFavorite = {},
             onSelectPost = {},
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
             homeListLazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
-        )
+            scaffoldState = rememberScaffoldState()
+        ) {}
     }
 }
 
@@ -812,6 +810,7 @@ fun PreviewHomeListNavRailScreen() {
     val postsFeed = runBlocking {
         (BlockingFakePostsRepository().getPostsFeed() as Result.Success).data
     }
+    val isExpandedScreen = remember { mutableStateOf(false) }
     HacknewsTheme {
         HomeFeedScreen(
             uiState = HomeUiState.HasPosts(
@@ -823,16 +822,15 @@ fun PreviewHomeListNavRailScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
-            showTopAppBar = true,
+            showTopAppBar = isExpandedScreen,
             onToggleFavorite = {},
             onSelectPost = {},
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
             homeListLazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
-        )
+            scaffoldState = rememberScaffoldState()
+        ) {}
     }
 }
 
@@ -844,6 +842,7 @@ fun PreviewHomeListDetailScreen() {
     val postsFeed = runBlocking {
         (BlockingFakePostsRepository().getPostsFeed() as Result.Success).data
     }
+    val isExpandedScreen = remember { mutableStateOf(false) }
     HacknewsTheme {
         HomeFeedWithArticleDetailsScreen(
             uiState = HomeUiState.HasPosts(
@@ -855,7 +854,7 @@ fun PreviewHomeListDetailScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
-            showTopAppBar = true,
+            showTopAppBar = isExpandedScreen,
             onToggleFavorite = {},
             onSelectPost = {},
             onRefreshPosts = {},
@@ -869,8 +868,7 @@ fun PreviewHomeListDetailScreen() {
                     post.id to rememberLazyListState()
                 }
             },
-            scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
-        )
+            scaffoldState = rememberScaffoldState()
+        ) {}
     }
 }

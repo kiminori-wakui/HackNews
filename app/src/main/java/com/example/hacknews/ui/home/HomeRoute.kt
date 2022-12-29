@@ -22,10 +22,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.*
 import com.example.hacknews.ui.article.ArticleScreen
 
 /**
@@ -41,7 +38,7 @@ import com.example.hacknews.ui.article.ArticleScreen
 @Composable
 fun HomeRoute(
     homeViewModel: HomeViewModel,
-    isExpandedScreen: Boolean,
+    isExpandedScreen: MutableState<Boolean>,
     openDrawer: () -> Unit,
     scaffoldState: ScaffoldState = rememberScaffoldState()
 ) {
@@ -84,7 +81,7 @@ fun HomeRoute(
 @Composable
 fun HomeRoute(
     uiState: HomeUiState,
-    isExpandedScreen: Boolean,
+    isExpandedScreen: MutableState<Boolean>,
     onToggleFavorite: (String) -> Unit,
     onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
@@ -108,12 +105,12 @@ fun HomeRoute(
         }
     }
 
-    val homeScreenType = getHomeScreenType(isExpandedScreen, uiState)
+    val homeScreenType = getHomeScreenType(isExpandedScreen.value, uiState)
     when (homeScreenType) {
         HomeScreenType.FeedWithArticleDetails -> {
             HomeFeedWithArticleDetailsScreen(
                 uiState = uiState,
-                showTopAppBar = !isExpandedScreen,
+                showTopAppBar = isExpandedScreen,
                 onToggleFavorite = onToggleFavorite,
                 onSelectPost = onSelectPost,
                 onRefreshPosts = onRefreshPosts,
@@ -130,7 +127,7 @@ fun HomeRoute(
         HomeScreenType.Feed -> {
             HomeFeedScreen(
                 uiState = uiState,
-                showTopAppBar = !isExpandedScreen,
+                showTopAppBar = isExpandedScreen,
                 onToggleFavorite = onToggleFavorite,
                 onSelectPost = onSelectPost,
                 onRefreshPosts = onRefreshPosts,
@@ -147,7 +144,7 @@ fun HomeRoute(
 
             ArticleScreen(
                 item = uiState.selectedItem,
-                isExpandedScreen = isExpandedScreen,
+                isExpandedScreen = isExpandedScreen.value,
                 onBack = onInteractWithFeed,
                 isFavorite = uiState.favorites.contains(uiState.selectedItem.id),
                 onToggleFavorite = {

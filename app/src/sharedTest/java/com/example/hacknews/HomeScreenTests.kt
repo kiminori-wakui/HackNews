@@ -65,9 +65,8 @@ class HomeScreenTests {
                     onErrorDismiss = {},
                     openDrawer = {},
                     homeListLazyListState = rememberLazyListState(),
-                    scaffoldState = scaffoldState,
-                    onSearchInputChanged = {}
-                )
+                    scaffoldState = scaffoldState
+                ) {}
             }
         }
 
