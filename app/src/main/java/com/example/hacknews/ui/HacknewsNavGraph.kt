@@ -57,7 +57,7 @@ fun HacknewsNavGraph(
                 homeViewModel = homeViewModel,
                 isExpandedScreen = isExpandedScreen,
                 openDrawer = openDrawer,
-                onClickSearch = onClickSearch
+                onClickSearchIcon = onClickSearch
             )
         }
         composable(HacknewsDestinations.INTERESTS_ROUTE) {

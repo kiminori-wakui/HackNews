@@ -29,7 +29,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.hacknews.R
-import com.example.hacknews.data.interests.MySingleton
+import com.example.hacknews.data.MySingleton
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.data.posts.impl.*
 import com.example.hacknews.model.Metadata
@@ -160,9 +160,104 @@ class HomeViewModel(
         }
     }
 
-    private fun requestQiitaWebApi() {
+    /**
+     * Refresh posts and update the UI state accordingly
+     */
+    fun refreshPosts() {
+        // Ui state is refreshing
+//        viewModelState.update { it.copy(isLoading = true) }
+//
+//        viewModelScope.launch {
+//            val result = postsRepository.getPostsFeed()
+//            viewModelState.update {
+//                when (result) {
+//                    is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
+//                    is Result.Error -> {
+//                        val errorMessages = it.errorMessages + ErrorMessage(
+//                            id = UUID.randomUUID().mostSignificantBits,
+//                            messageId = R.string.load_error
+//                        )
+//                        it.copy(errorMessages = errorMessages, isLoading = false)
+//                    }
+//                }
+//            }
+//        }
+    }
+
+    fun onSearchEvent() {
+        val keyword = viewModelState.value.searchInput
+        viewModelScope.launch {
+            requestQiitaWebApi(keyword)
+            requestConnpassWebApi(keyword)
+        }
+    }
+
+    /**
+     * Toggle favorite of a post
+     */
+    fun toggleFavourite(postId: String) {
+        viewModelScope.launch {
+            postsRepository.toggleFavorite(postId)
+        }
+    }
+
+    /**
+     * Selects the given article to view more information about it.
+     */
+    fun selectArticle(url: String) {
+        // Treat selecting a detail as simply interacting with it
+//        interactedWithArticleDetails(postId)
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(context, intent, null)
+    }
+
+    /**
+     * Notify that an error was displayed on the screen
+     */
+    fun errorShown(errorId: Long) {
+        viewModelState.update { currentUiState ->
+            val errorMessages = currentUiState.errorMessages.filterNot { it.id == errorId }
+            currentUiState.copy(errorMessages = errorMessages)
+        }
+    }
+
+    /**
+     * Notify that the user interacted with the feed
+     */
+    fun interactedWithFeed() {
+        viewModelState.update {
+            it.copy(isArticleOpen = false)
+        }
+    }
+
+    /**
+     * Notify that the user interacted with the article details
+     */
+    fun interactedWithArticleDetails(postId: String) {
+        viewModelState.update {
+            it.copy(
+                selectedPostId = postId,
+                isArticleOpen = true
+            )
+        }
+    }
+
+    /**
+     * Notify that the user updated the search query
+     */
+    fun onSearchInputChanged(searchInput: String) {
+        viewModelState.update {
+            it.copy(searchInput = searchInput)
+        }
+    }
+
+    private fun requestQiitaWebApi(targetWord: String = "") {
+        var keyword = ""
+        if (targetWord.isNotBlank()) {
+            keyword = "?query=" + targetWord
+        }
         val jsonArrayRequest = JsonArrayRequest(
-            Request.Method.GET, WEB_API_KEY_QIITA, null,
+            Request.Method.GET, WEB_API_KEY_QIITA + keyword, null,
             Response.Listener { response ->
                 val items = mutableListOf<Item>()
                 for (i in 0 until response.length()) {
@@ -223,9 +318,13 @@ class HomeViewModel(
         MySingleton.getInstance(context = context).addToRequestQueue(jsonArrayRequest)
     }
 
-    private fun requestConnpassWebApi() {
+    private fun requestConnpassWebApi(targetWord: String = "") {
+        var keyword = ""
+        if (targetWord.isNotBlank()) {
+            keyword = "?keyword_or=" + targetWord
+        }
         val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.GET, WEB_API_KEY_CONNPASS, null,
+            Request.Method.GET, WEB_API_KEY_CONNPASS + keyword, null,
             Response.Listener { response ->
                 val items = mutableListOf<Item>()
                 val events = response.getJSONArray("events")
@@ -292,89 +391,6 @@ class HomeViewModel(
         val dt = df.parse(startedAt)
         val df2 = SimpleDateFormat("M/d")
         return df2.format(dt)
-    }
-
-    /**
-     * Refresh posts and update the UI state accordingly
-     */
-    fun refreshPosts() {
-        // Ui state is refreshing
-//        viewModelState.update { it.copy(isLoading = true) }
-//
-//        viewModelScope.launch {
-//            val result = postsRepository.getPostsFeed()
-//            viewModelState.update {
-//                when (result) {
-//                    is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
-//                    is Result.Error -> {
-//                        val errorMessages = it.errorMessages + ErrorMessage(
-//                            id = UUID.randomUUID().mostSignificantBits,
-//                            messageId = R.string.load_error
-//                        )
-//                        it.copy(errorMessages = errorMessages, isLoading = false)
-//                    }
-//                }
-//            }
-//        }
-    }
-
-    /**
-     * Toggle favorite of a post
-     */
-    fun toggleFavourite(postId: String) {
-        viewModelScope.launch {
-            postsRepository.toggleFavorite(postId)
-        }
-    }
-
-    /**
-     * Selects the given article to view more information about it.
-     */
-    fun selectArticle(url: String) {
-        // Treat selecting a detail as simply interacting with it
-//        interactedWithArticleDetails(postId)
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        startActivity(context, intent, null)
-    }
-
-    /**
-     * Notify that an error was displayed on the screen
-     */
-    fun errorShown(errorId: Long) {
-        viewModelState.update { currentUiState ->
-            val errorMessages = currentUiState.errorMessages.filterNot { it.id == errorId }
-            currentUiState.copy(errorMessages = errorMessages)
-        }
-    }
-
-    /**
-     * Notify that the user interacted with the feed
-     */
-    fun interactedWithFeed() {
-        viewModelState.update {
-            it.copy(isArticleOpen = false)
-        }
-    }
-
-    /**
-     * Notify that the user interacted with the article details
-     */
-    fun interactedWithArticleDetails(postId: String) {
-        viewModelState.update {
-            it.copy(
-                selectedPostId = postId,
-                isArticleOpen = true
-            )
-        }
-    }
-
-    /**
-     * Notify that the user updated the search query
-     */
-    fun onSearchInputChanged(searchInput: String) {
-        viewModelState.update {
-            it.copy(searchInput = searchInput)
-        }
     }
 
     /**

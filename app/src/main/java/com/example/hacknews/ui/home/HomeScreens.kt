@@ -131,6 +131,7 @@ fun HomeFeedWithArticleDetailsScreen(
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
     onSearchInputChanged: (String) -> Unit,
+    onSearch: () -> Unit,
 ) {
     HomeScreenWithList(
         uiState = uiState,
@@ -159,6 +160,7 @@ fun HomeFeedWithArticleDetailsScreen(
                 state = homeListLazyListState,
                 searchInput = hasPostsUiState.searchInput,
                 onSearchInputChanged = onSearchInputChanged,
+                onSearch = onSearch,
             )
             // Crossfade between different detail posts
             Crossfade(targetState = hasPostsUiState.selectedItem) { detailPost ->
@@ -228,6 +230,7 @@ fun HomeFeedScreen(
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
     onClickSearch: () -> Unit,
+    onSearch: () -> Unit,
     homeListLazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
@@ -257,7 +260,8 @@ fun HomeFeedScreen(
             modifier = contentModifier,
             state = homeListLazyListState,
             searchInput = searchInput,
-            onSearchInputChanged = onSearchInputChanged
+            onSearchInputChanged = onSearchInputChanged,
+            onSearch = onSearch
         )
     }
 }
@@ -419,6 +423,7 @@ private fun PostList(
     state: LazyListState = rememberLazyListState(),
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    onSearch: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -431,6 +436,7 @@ private fun PostList(
                     Modifier.padding(horizontal = 16.dp),
                     searchInput = searchInput,
                     onSearchInputChanged = onSearchInputChanged,
+                    onSearch = onSearch
                 )
             }
         }
@@ -638,6 +644,7 @@ private fun HomeSearch(
     modifier: Modifier = Modifier,
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
+    onSearch: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
@@ -650,7 +657,9 @@ private fun HomeSearch(
             modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                IconButton(onClick = { /* Functionality not supported yet */ }) {
+                IconButton(onClick = {
+                    val aaa = null
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = stringResource(R.string.cd_search)
@@ -673,20 +682,22 @@ private fun HomeSearch(
                     // keyboardActions submits the search query when the search key is pressed
                     keyboardActions = KeyboardActions(
                         onSearch = {
-                            submitSearch(onSearchInputChanged, context)
+                            submitSearch(onSearch, context)
                             keyboardController?.hide()
                         }
                     ),
                     modifier = Modifier
                         .interceptKey(Key.Enter) { // submit a search query when Enter is pressed
-                            submitSearch(onSearchInputChanged, context)
+                            submitSearch(onSearch, context)
                         }
                         .interceptKey(Key.Escape) { // dismiss focus when Escape is pressed
                             focusManager.clearFocus()
                         }
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { /* Functionality not supported yet */ }) {
+                IconButton(onClick = {
+                    val aaa = null
+                }) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
                         contentDescription = stringResource(R.string.cd_more_actions)
@@ -701,10 +712,10 @@ private fun HomeSearch(
  * Stub helper function to submit a user's search query
  */
 private fun submitSearch(
-    onSearchInputChanged: (String) -> Unit,
+    onSearch: () -> Unit,
     context: Context
 ) {
-    onSearchInputChanged("")
+    onSearch()
     Toast.makeText(
         context,
         "Search is not yet implemented",
@@ -810,7 +821,8 @@ fun PreviewHomeListDrawerScreen() {
             onClickSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
+            onSearchInputChanged = {},
+            onSearch = {}
         )
     }
 }
@@ -847,7 +859,8 @@ fun PreviewHomeListNavRailScreen() {
             onClickSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
+            onSearchInputChanged = {},
+            onSearch = {}
         )
     }
 }
@@ -887,7 +900,8 @@ fun PreviewHomeListDetailScreen() {
                 }
             },
             scaffoldState = rememberScaffoldState(),
-            onSearchInputChanged = {}
+            onSearchInputChanged = {},
+            onSearch = {}
         )
     }
 }

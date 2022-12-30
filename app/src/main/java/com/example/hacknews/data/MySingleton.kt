@@ -1,4 +1,4 @@
-package com.example.hacknews.data.interests
+package com.example.hacknews.data
 
 import android.content.Context
 import android.graphics.Bitmap
