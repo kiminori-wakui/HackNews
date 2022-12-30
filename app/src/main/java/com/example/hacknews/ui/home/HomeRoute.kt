@@ -43,6 +43,7 @@ fun HomeRoute(
     homeViewModel: HomeViewModel,
     isExpandedScreen: Boolean,
     openDrawer: () -> Unit,
+    onClickSearch: () -> Unit,
     scaffoldState: ScaffoldState = rememberScaffoldState()
 ) {
     // UiState of the HomeScreen
@@ -59,6 +60,7 @@ fun HomeRoute(
         onInteractWithArticleDetails = { homeViewModel.interactedWithArticleDetails(it) },
         onSearchInputChanged = { homeViewModel.onSearchInputChanged(it) },
         openDrawer = openDrawer,
+        onClickSearch = onClickSearch,
         scaffoldState = scaffoldState,
     )
 }
@@ -93,6 +95,7 @@ fun HomeRoute(
     onInteractWithArticleDetails: (String) -> Unit,
     onSearchInputChanged: (String) -> Unit,
     openDrawer: () -> Unit,
+    onClickSearch: () -> Unit,
     scaffoldState: ScaffoldState
 ) {
     // Construct the lazy list states for the list and the details outside of deciding which one to
@@ -121,6 +124,7 @@ fun HomeRoute(
                 onInteractWithList = onInteractWithFeed,
                 onInteractWithDetail = onInteractWithArticleDetails,
                 openDrawer = openDrawer,
+                onClickSearch = onClickSearch,
                 homeListLazyListState = homeListLazyListState,
                 articleDetailLazyListStates = articleDetailLazyListStates,
                 scaffoldState = scaffoldState,
@@ -136,6 +140,7 @@ fun HomeRoute(
                 onRefreshPosts = onRefreshPosts,
                 onErrorDismiss = onErrorDismiss,
                 openDrawer = openDrawer,
+                onClickSearch = onClickSearch,
                 homeListLazyListState = homeListLazyListState,
                 scaffoldState = scaffoldState,
                 onSearchInputChanged = onSearchInputChanged,

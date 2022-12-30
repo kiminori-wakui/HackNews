@@ -34,11 +34,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalDrawer
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -74,8 +70,10 @@ fun HacknewsApp(
         val currentRoute =
             navBackStackEntry?.destination?.route ?: HacknewsDestinations.HOME_ROUTE
 
-        val isExpandedScreen = widthSizeClass == WindowWidthSizeClass.Expanded
-        val sizeAwareDrawerState = rememberSizeAwareDrawerState(isExpandedScreen)
+        val isExpandedScreen = remember {
+            mutableStateOf(widthSizeClass == WindowWidthSizeClass.Expanded)
+        }
+        val sizeAwareDrawerState = rememberSizeAwareDrawerState(isExpandedScreen.value)
 
         ModalDrawer(
             drawerContent = {
@@ -91,7 +89,7 @@ fun HacknewsApp(
             },
             drawerState = sizeAwareDrawerState,
             // Only enable opening the drawer via gestures if the screen is not expanded
-            gesturesEnabled = !isExpandedScreen
+            gesturesEnabled = !isExpandedScreen.value
         ) {
             Row(
                 Modifier
@@ -103,7 +101,7 @@ fun HacknewsApp(
                             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                     )
             ) {
-                if (isExpandedScreen) {
+                if (isExpandedScreen.value) {
                     AppNavRail(
                         currentRoute = currentRoute,
                         navigateToHome = navigationActions.navigateToHome,
@@ -112,9 +110,10 @@ fun HacknewsApp(
                 }
                 HacknewsNavGraph(
                     appContainer = appContainer,
-                    isExpandedScreen = isExpandedScreen,
+                    isExpandedScreen = isExpandedScreen.value,
                     navController = navController,
                     openDrawer = { coroutineScope.launch { sizeAwareDrawerState.open() } },
+                    onClickSearch = { isExpandedScreen.value = !isExpandedScreen.value }
                 )
             }
         }

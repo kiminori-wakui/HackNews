@@ -37,6 +37,7 @@ fun HacknewsNavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     openDrawer: () -> Unit = {},
+    onClickSearch: () -> Unit = {},
     startDestination: String = HacknewsDestinations.HOME_ROUTE
 ) {
     NavHost(
@@ -55,7 +56,8 @@ fun HacknewsNavGraph(
             HomeRoute(
                 homeViewModel = homeViewModel,
                 isExpandedScreen = isExpandedScreen,
-                openDrawer = openDrawer
+                openDrawer = openDrawer,
+                onClickSearch = onClickSearch
             )
         }
         composable(HacknewsDestinations.INTERESTS_ROUTE) {

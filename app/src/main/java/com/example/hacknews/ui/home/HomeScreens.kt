@@ -19,6 +19,7 @@ package com.example.hacknews.ui.home
 import android.content.Context
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -124,6 +125,7 @@ fun HomeFeedWithArticleDetailsScreen(
     onInteractWithList: () -> Unit,
     onInteractWithDetail: (String) -> Unit,
     openDrawer: () -> Unit,
+    onClickSearch: () -> Unit,
     homeListLazyListState: LazyListState,
     articleDetailLazyListStates: Map<String, LazyListState>,
     scaffoldState: ScaffoldState,
@@ -136,6 +138,7 @@ fun HomeFeedWithArticleDetailsScreen(
         onRefreshPosts = onRefreshPosts,
         onErrorDismiss = onErrorDismiss,
         openDrawer = openDrawer,
+        onClickSearch = onClickSearch,
         homeListLazyListState = homeListLazyListState,
         scaffoldState = scaffoldState,
         modifier = modifier,
@@ -224,6 +227,7 @@ fun HomeFeedScreen(
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
+    onClickSearch: () -> Unit,
     homeListLazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
@@ -236,6 +240,7 @@ fun HomeFeedScreen(
         onRefreshPosts = onRefreshPosts,
         onErrorDismiss = onErrorDismiss,
         openDrawer = openDrawer,
+        onClickSearch = onClickSearch,
         homeListLazyListState = homeListLazyListState,
         scaffoldState = scaffoldState,
         modifier = modifier
@@ -273,6 +278,7 @@ private fun HomeScreenWithList(
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
+    onClickSearch: () -> Unit,
     homeListLazyListState: LazyListState,
     scaffoldState: ScaffoldState,
     modifier: Modifier = Modifier,
@@ -288,6 +294,7 @@ private fun HomeScreenWithList(
             if (showTopAppBar) {
                 HomeTopAppBar(
                     openDrawer = openDrawer,
+                    onClickSearch = onClickSearch,
                     elevation = if (!homeListLazyListState.isScrolled) 0.dp else 4.dp
                 )
             }
@@ -329,6 +336,9 @@ private fun HomeScreenWithList(
         )
     }
 
+    BackHandler {
+        if (!showTopAppBar) onClickSearch()
+    }
     // Process one error message at a time and show them as Snackbars in the UI
     if (uiState.errorMessages.isNotEmpty()) {
         // Remember the errorMessage to display on the screen
@@ -732,7 +742,8 @@ private fun PostTopBar(
 @Composable
 private fun HomeTopAppBar(
     elevation: Dp,
-    openDrawer: () -> Unit
+    openDrawer: () -> Unit,
+    onClickSearch: () -> Unit
 ) {
     val title = stringResource(id = R.string.app_name)
     TopAppBar(
@@ -756,7 +767,10 @@ private fun HomeTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: Open search */ }) {
+            IconButton(onClick = {
+            /* TODO: Open search */
+                onClickSearch()
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.cd_search)
@@ -793,6 +807,7 @@ fun PreviewHomeListDrawerScreen() {
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
+            onClickSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
             onSearchInputChanged = {}
@@ -829,6 +844,7 @@ fun PreviewHomeListNavRailScreen() {
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
+            onClickSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
             onSearchInputChanged = {}
@@ -863,6 +879,7 @@ fun PreviewHomeListDetailScreen() {
             onInteractWithList = {},
             onInteractWithDetail = {},
             openDrawer = {},
+            onClickSearch = {},
             homeListLazyListState = rememberLazyListState(),
             articleDetailLazyListStates = postsFeed.allItems.associate { post ->
                 key(post.id) {
