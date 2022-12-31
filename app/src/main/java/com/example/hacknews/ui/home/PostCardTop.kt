@@ -38,7 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hacknews.R
-import com.example.hacknews.data.posts.impl.posts
+import com.example.hacknews.data.posts.impl.postsDummy
 import com.example.hacknews.model.Item
 import com.example.hacknews.ui.theme.HacknewsTheme
 import com.example.hacknews.utils.CompletePreviews
@@ -101,7 +101,7 @@ fun PostCardTop(item: Item, modifier: Modifier = Modifier) {
 fun PostCardTopPreview() {
     HacknewsTheme {
         Surface {
-            PostCardTop(posts.highlightedItem)
+            PostCardTop(postsDummy.highlightedItem)
         }
     }
 }
@@ -117,7 +117,7 @@ fun PostCardTopPreview() {
 fun PostCardTopPreviews() {
     HacknewsTheme {
         Surface {
-            PostCardTop(posts.highlightedItem)
+            PostCardTop(postsDummy.highlightedItem)
         }
     }
 }

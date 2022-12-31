@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hacknews.data.AppContainer
@@ -48,9 +49,10 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.launch
 
 @Composable
-fun HacknewsApp(
+fun HackNewsApp(
     appContainer: AppContainer,
-    widthSizeClass: WindowWidthSizeClass
+    widthSizeClass: WindowWidthSizeClass,
+    lifecycle: Lifecycle
 ) {
     HacknewsTheme {
         val systemUiController = rememberSystemUiController()
@@ -108,7 +110,8 @@ fun HacknewsApp(
                         navigateToInterests = navigationActions.navigateToInterests,
                     )
                 }
-                HacknewsNavGraph(
+                HackNewsNavGraph(
+                    lifecycle = lifecycle,
                     appContainer = appContainer,
                     isExpandedScreen = isExpandedScreen.value,
                     navController = navController,

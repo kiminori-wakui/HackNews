@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         val appContainer = (application as HacknewsApplication).container
         setContent {
             val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
-            HacknewsApp(appContainer, widthSizeClass)
+            HackNewsApp(appContainer, widthSizeClass, lifecycle)
         }
     }
 }

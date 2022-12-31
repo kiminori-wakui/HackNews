@@ -19,6 +19,7 @@ package com.example.hacknews.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -31,7 +32,8 @@ import com.example.hacknews.ui.interests.InterestsRoute
 import com.example.hacknews.ui.interests.InterestsViewModel
 
 @Composable
-fun HacknewsNavGraph(
+fun HackNewsNavGraph(
+    lifecycle: Lifecycle,
     appContainer: AppContainer,
     isExpandedScreen: Boolean,
     modifier: Modifier = Modifier,
@@ -50,9 +52,11 @@ fun HacknewsNavGraph(
             val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.provideFactory(
                     appContainer.postsRepository,
+                    appContainer.eventsRepository,
                     context
                 )
             )
+            lifecycle.addObserver(homeViewModel)
             HomeRoute(
                 homeViewModel = homeViewModel,
                 isExpandedScreen = isExpandedScreen,

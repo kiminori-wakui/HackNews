@@ -1013,7 +1013,7 @@ val item5 = Item(
     imageThumbId = R.drawable.post_5_thumb
 )
 
-val posts: ItemsFeed =
+val postsDummy: ItemsFeed =
     ItemsFeed(
         highlightedItem = item4,
         recentPosts = listOf(

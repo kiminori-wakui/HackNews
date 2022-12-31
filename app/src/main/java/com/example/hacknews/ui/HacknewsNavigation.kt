@@ -20,7 +20,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
 /**
- * Destinations used in the [HacknewsApp].
+ * Destinations used in the [HackNewsApp].
  */
 object HacknewsDestinations {
     const val HOME_ROUTE = "home"

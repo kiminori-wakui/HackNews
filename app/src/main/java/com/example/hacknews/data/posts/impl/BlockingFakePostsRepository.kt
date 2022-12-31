@@ -16,6 +16,8 @@
 
 package com.example.hacknews.data.posts.impl
 
+import android.content.Context
+import androidx.lifecycle.LiveData
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Item
@@ -39,7 +41,7 @@ class BlockingFakePostsRepository : PostsRepository {
 
     override suspend fun getPost(postId: String?): Result<Item> {
         return withContext(Dispatchers.IO) {
-            val post = posts.allItems.find { it.id == postId }
+            val post = postsDummy.allItems.find { it.id == postId }
             if (post == null) {
                 Result.Error(IllegalArgumentException("Unable to find post"))
             } else {
@@ -48,8 +50,12 @@ class BlockingFakePostsRepository : PostsRepository {
         }
     }
 
+    override suspend fun getPosts(url: String, context: Context) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getPostsFeed(): Result<ItemsFeed> {
-        return Result.Success(posts)
+        return Result.Success(postsDummy)
     }
 
     override fun observeFavorites(): Flow<Set<String>> = favorites
@@ -59,4 +65,7 @@ class BlockingFakePostsRepository : PostsRepository {
         set.addOrRemove(postId)
         favorites.value = set
     }
+
+    override val posts: LiveData<List<Item>>
+        get() = TODO("Not yet implemented")
 }

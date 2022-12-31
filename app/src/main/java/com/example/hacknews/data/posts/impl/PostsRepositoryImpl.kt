@@ -17,27 +17,39 @@
 package com.example.hacknews.data.posts.impl
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonArrayRequest
+import com.example.hacknews.R
+import com.example.hacknews.data.MySingleton
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Item
 import com.example.hacknews.model.ItemsFeed
+import com.example.hacknews.model.Metadata
+import com.example.hacknews.model.PostAuthor
 import com.example.hacknews.utils.addOrRemove
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 
 /**
  * Implementation of PostsRepository that returns a hardcoded list of
  * posts with resources after some delay in a background thread.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class FakePostsRepository : PostsRepository {
+class PostsRepositoryImpl : PostsRepository {
+
+    companion object {
+        private const val TAG = "PostsRepositoryImpl"
+    }
+
+    private val _posts = MutableLiveData<List<Item>>(listOf())
+    override val posts: LiveData<List<Item>> = _posts
 
     // for now, store these in memory
     private val favorites = MutableStateFlow<Set<String>>(setOf())
@@ -56,8 +68,45 @@ class FakePostsRepository : PostsRepository {
         }
     }
 
-    override suspend fun getPosts(url: String, context: Context) {
-        TODO("Not yet implemented")
+    override suspend fun getPosts(requestUrl: String, context: Context) {
+        mutex.withLock {
+            val jsonArrayRequest = JsonArrayRequest(
+                Request.Method.GET, requestUrl, null,
+                { response ->
+                    val items = mutableListOf<Item>()
+                    for (i in 0 until response.length()) {
+                        val post = response.getJSONObject(i)
+                        val title = post.getString("title")
+                        val url = post.getString("url")
+                        val user = post.getJSONObject("user")
+                        val imageUrl = user.getString("profile_image_url")
+                        items.add(
+                            Item(
+                                id = "84eb677660d9",
+                                title = title,
+                                subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
+                                url = url,
+                                publication = publication,
+                                metadata = Metadata(
+                                    author = PostAuthor(name = "name"),
+                                    date = "date",
+                                    readTimeMinutes = 1
+                                ),
+                                paragraphs = paragraphsPost4,
+                                imageUrl = imageUrl,
+                                imageId = R.drawable.post_4,
+                                imageThumbId = R.drawable.post_4_thumb
+                            )
+                        )
+                    }
+                    _posts.value = items
+                },
+                { error ->
+                    Log.e(TAG, error.message.toString())
+                }
+            )
+            MySingleton.getInstance(context = context).addToRequestQueue(jsonArrayRequest)
+        }
     }
 
     override suspend fun getPostsFeed(): Result<ItemsFeed> {
@@ -80,9 +129,6 @@ class FakePostsRepository : PostsRepository {
             favorites.value = set.toSet()
         }
     }
-
-    override val posts: LiveData<List<Item>>
-        get() = TODO("Not yet implemented")
 
     // used to drive "random" failure in a predictable pattern, making the first request always
     // succeed

@@ -17,16 +17,19 @@
 package com.example.hacknews.data
 
 import android.content.Context
+import com.example.hacknews.data.events.EventsRepository
+import com.example.hacknews.data.events.impl.EventsRepositoryImpl
 import com.example.hacknews.data.interests.InterestsRepository
 import com.example.hacknews.data.interests.impl.FakeInterestsRepository
 import com.example.hacknews.data.posts.PostsRepository
-import com.example.hacknews.data.posts.impl.FakePostsRepository
+import com.example.hacknews.data.posts.impl.PostsRepositoryImpl
 
 /**
  * Dependency Injection container at the application level.
  */
 interface AppContainer {
     val postsRepository: PostsRepository
+    val eventsRepository: EventsRepository
     val interestsRepository: InterestsRepository
 }
 
@@ -38,7 +41,11 @@ interface AppContainer {
 class AppContainerImpl(private val applicationContext: Context) : AppContainer {
 
     override val postsRepository: PostsRepository by lazy {
-        FakePostsRepository()
+        PostsRepositoryImpl()
+    }
+
+    override val eventsRepository: EventsRepository by lazy {
+        EventsRepositoryImpl()
     }
 
     override val interestsRepository: InterestsRepository by lazy {

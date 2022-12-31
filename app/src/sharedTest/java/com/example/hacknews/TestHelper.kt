@@ -19,16 +19,17 @@ package com.example.hacknews
 import android.content.Context
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import com.example.hacknews.ui.HacknewsApp
+import com.example.hacknews.ui.HackNewsApp
 
 /**
  * Launches the app from a test context
  */
 fun ComposeContentTestRule.launchHackNewsApp(context: Context) {
     setContent {
-        HacknewsApp(
+        HackNewsApp(
             appContainer = TestAppContainer(context),
-            widthSizeClass = WindowWidthSizeClass.Compact
+            widthSizeClass = WindowWidthSizeClass.Compact,
+            lifecycle = lifecycle
         )
     }
 }

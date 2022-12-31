@@ -16,6 +16,8 @@
 
 package com.example.hacknews.data.posts
 
+import android.content.Context
+import androidx.lifecycle.LiveData
 import com.example.hacknews.data.Result
 import com.example.hacknews.model.Item
 import com.example.hacknews.model.ItemsFeed
@@ -26,6 +28,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface PostsRepository {
 
+    val posts: LiveData<List<Item>>
+
     /**
      * Get a specific HackNews post.
      */
@@ -33,6 +37,11 @@ interface PostsRepository {
 
     /**
      * Get HackNews posts.
+     */
+    suspend fun getPosts(requestUrl: String, context: Context)
+
+    /**
+     * Get HackNews posts feed.
      */
     suspend fun getPostsFeed(): Result<ItemsFeed>
 

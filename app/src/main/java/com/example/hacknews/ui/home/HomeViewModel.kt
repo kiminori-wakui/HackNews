@@ -16,22 +16,14 @@
 
 package com.example.hacknews.ui.home
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.JsonArrayRequest
-import com.android.volley.toolbox.JsonObjectRequest
-import com.example.hacknews.R
-import com.example.hacknews.data.MySingleton
+import androidx.lifecycle.*
+import androidx.lifecycle.Observer
+import com.example.hacknews.data.events.EventsRepository
 import com.example.hacknews.data.posts.PostsRepository
-import com.example.hacknews.data.posts.impl.*
 import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Item
 import com.example.hacknews.model.PostAuthor
@@ -43,7 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.runBlocking
 
 /**
  * UI state for the Home route.
@@ -132,10 +124,19 @@ private data class HomeViewModelState(
  */
 class HomeViewModel(
     private val postsRepository: PostsRepository,
+    private val eventsRepository: EventsRepository,
     private val context: Context,
-) : ViewModel() {
+) : ViewModel(), LifecycleObserver {
 
     private val viewModelState = MutableStateFlow(HomeViewModelState(isLoading = true))
+
+    private val postsObserver = Observer<List<Item>> { posts ->
+        updateViewModelState(recentPosts = posts)
+    }
+
+    private val eventsObserver = Observer<List<Item>> { events ->
+        updateViewModelState(recentEvents = events)
+    }
 
     // UI state exposed to the UI
     val uiState = viewModelState
@@ -149,15 +150,25 @@ class HomeViewModel(
     init {
         refreshPosts()
 
-        // Observe for favorite changes in the repo layer
-        viewModelScope.launch {
+        runBlocking {
+            postsRepository.posts.observeForever(postsObserver)
+            eventsRepository.events.observeForever(eventsObserver)
+
             requestQiitaWebApi()
             requestConnpassWebApi()
-
+        }
+        // Observe for favorite changes in the repo layer
+        viewModelScope.launch {
             postsRepository.observeFavorites().collect { favorites ->
                 viewModelState.update { it.copy(favorites = favorites) }
             }
         }
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy() {
+        postsRepository.posts.removeObserver(postsObserver)
+        eventsRepository.events.removeObserver(eventsObserver)
     }
 
     /**
@@ -185,10 +196,9 @@ class HomeViewModel(
     }
 
     fun onSearchEvent() {
-        val keyword = viewModelState.value.searchInput
         viewModelScope.launch {
-            requestQiitaWebApi(keyword)
-            requestConnpassWebApi(keyword)
+            requestQiitaWebApi()
+            requestConnpassWebApi()
         }
     }
 
@@ -251,146 +261,55 @@ class HomeViewModel(
         }
     }
 
-    private fun requestQiitaWebApi(targetWord: String = "") {
+    private suspend fun requestQiitaWebApi() {
         var keyword = ""
-        if (targetWord.isNotBlank()) {
-            keyword = "?query=" + targetWord
+        val searchInput = viewModelState.value.searchInput
+        if (searchInput.isNotBlank()) {
+            keyword = "?query=$searchInput}"
         }
-        val jsonArrayRequest = JsonArrayRequest(
-            Request.Method.GET, WEB_API_KEY_QIITA + keyword, null,
-            Response.Listener { response ->
-                val items = mutableListOf<Item>()
-                for (i in 0 until response.length()) {
-                    val post = response.getJSONObject(i)
-                    val title = post.getString("title")
-                    val url = post.getString("url")
-                    val user = post.getJSONObject("user")
-                    val imageUrl = user.getString("profile_image_url")
-                    items.add(
-                        Item(
-                            id = "84eb677660d9",
-                            title = title,
-                            subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
-                            url = url,
-                            publication = publication,
-                            metadata = Metadata(
-                                author = PostAuthor(name = "name"),
-                                date = "date",
-                                readTimeMinutes = 1
-                            ),
-                            paragraphs = paragraphsPost4,
-                            imageUrl = imageUrl,
-                            imageId = R.drawable.post_4,
-                            imageThumbId = R.drawable.post_4_thumb
-                        )
-                    )
-                }
-                viewModelState.update {
-                    val itemsFeed = it.itemsFeed ?: ItemsFeed(
-                        highlightedItem = item4,
-                        recentPosts = listOf(
-                            item3.copy(id = "post8"),
-                            item4.copy(id = "post9"),
-                            item5.copy(id = "post10")
-                        ),
-                        recentEvents = listOf(
-                            item5,
-                            item1.copy(id = "post6"),
-                            item2.copy(id = "post7")
-                        )
-                    )
-                    it.copy(
-                        itemsFeed = ItemsFeed(
-                            highlightedItem = itemsFeed.highlightedItem,
-                            recentPosts = items,
-                            recentEvents = itemsFeed.recentEvents
-                        ),
-                        isLoading = false
-                    )
-                }
-            },
-            Response.ErrorListener { error ->
-                // TODO: Handle error
-                error.stackTrace
-            }
-        )
-        // Access the RequestQueue through your singleton class.
-        MySingleton.getInstance(context = context).addToRequestQueue(jsonArrayRequest)
+        postsRepository.getPosts(WEB_API_KEY_QIITA + keyword, context)
     }
 
-    private fun requestConnpassWebApi(targetWord: String = "") {
+    private suspend fun requestConnpassWebApi() {
         var keyword = ""
-        if (targetWord.isNotBlank()) {
-            keyword = "?keyword_or=" + targetWord
+        val searchInput = viewModelState.value.searchInput
+        if (searchInput.isNotBlank()) {
+            keyword = "?keyword_or=$searchInput"
         }
-        val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.GET, WEB_API_KEY_CONNPASS + keyword, null,
-            Response.Listener { response ->
-                val items = mutableListOf<Item>()
-                val events = response.getJSONArray("events")
-                for (i in 0 until events.length()) {
-                    val event = events.getJSONObject(i)
-                    val title = event.getString("title")
-                    val startedAt = event.getString("started_at")
-                    val date = parseEventDate(startedAt)
-                    val url = event.getString("event_url")
-                    items.add(
-                        Item(
-                            id = "84eb677660d9",
-                            title = title,
-                            subtitle = "TL;DR: Expose resource IDs from ViewModels to avoid showing obsolete data.",
-                            url = url,
-                            publication = publication,
-                            metadata = Metadata(
-                                author = PostAuthor(name = date),
-                                date = date,
-                                readTimeMinutes = 1
-                            ),
-                            paragraphs = paragraphsPost4,
-                            imageId = R.drawable.post_4,
-                            imageThumbId = R.drawable.post_4_thumb
-                        )
-                    )
-                }
-                viewModelState.update {
-                    val itemsFeed = it.itemsFeed ?: ItemsFeed(
-                        highlightedItem = item4,
-                        recentPosts = listOf(
-                            item3.copy(id = "post8"),
-                            item4.copy(id = "post9"),
-                            item5.copy(id = "post10")
-                        ),
-                        recentEvents = listOf(
-                            item5,
-                            item1.copy(id = "post6"),
-                            item2.copy(id = "post7")
-                        )
-                    )
-                    it.copy(
-                        itemsFeed = ItemsFeed(
-                            highlightedItem = itemsFeed.highlightedItem,
-                            recentPosts = itemsFeed.recentPosts,
-                            recentEvents = items
-                        ),
-                        isLoading = false
-                    )
-                }
-            },
-            Response.ErrorListener { error ->
-                // TODO: Handle error
-            }
-        )
-        // Access the RequestQueue through your singleton class.
-        MySingleton.getInstance(context = context).addToRequestQueue(jsonObjectRequest)
+        eventsRepository.getEvents(WEB_API_KEY_CONNPASS + keyword, context)
     }
 
-    @SuppressLint("SimpleDateFormat", "NewApi")
-    private fun parseEventDate(startedAt: String?): String {
-        startedAt ?: return ""
-        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX")
-        val dt = df.parse(startedAt)
-        val df2 = SimpleDateFormat("M/d")
-        return df2.format(dt)
+    private fun updateViewModelState(
+        highlightedItem: Item? = null,
+        recentPosts: List<Item>? = null,
+        recentEvents: List<Item>? = null
+    ) {
+        viewModelState.update {
+            val itemsFeed = it.itemsFeed ?: ItemsFeed(
+                highlightedItem = Item(
+                    id = "0",
+                    title = "none",
+                    url = "",
+                    metadata = Metadata(
+                        author = PostAuthor(name = "name"),
+                        date = "date",
+                        readTimeMinutes = 1
+                    ),
+                    imageId = 0,
+                    imageThumbId = 0,
+                ),
+                recentPosts = listOf(),
+                recentEvents = listOf()
+            )
+            it.copy(
+                itemsFeed = ItemsFeed(
+                    highlightedItem = highlightedItem ?: itemsFeed.highlightedItem,
+                    recentPosts = recentPosts ?: itemsFeed.recentPosts,
+                    recentEvents = recentEvents ?: itemsFeed.recentEvents
+                ),
+                isLoading = false
+            )
+        }
     }
 
     /**
@@ -402,11 +321,12 @@ class HomeViewModel(
 
         fun provideFactory(
             postsRepository: PostsRepository,
+            eventsRepository: EventsRepository,
             context: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HomeViewModel(postsRepository, context) as T
+                return HomeViewModel(postsRepository, eventsRepository, context) as T
             }
         }
     }
