@@ -22,6 +22,7 @@ import android.net.Uri
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
+import com.example.hacknews.R
 import com.example.hacknews.data.events.EventsRepository
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Metadata
@@ -295,8 +296,8 @@ class HomeViewModel(
                         date = "date",
                         readTimeMinutes = 1
                     ),
-                    imageId = 0,
-                    imageThumbId = 0,
+                    imageId = R.drawable.post_4,
+                    imageThumbId = R.drawable.post_4_thumb
                 ),
                 recentPosts = listOf(),
                 recentEvents = listOf()
