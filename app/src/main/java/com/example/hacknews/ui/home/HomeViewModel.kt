@@ -149,14 +149,11 @@ class HomeViewModel(
         )
 
     init {
-        refreshPosts()
-
         runBlocking {
             postsRepository.posts.observeForever(postsObserver)
             eventsRepository.events.observeForever(eventsObserver)
 
-            requestQiitaWebApi()
-            requestConnpassWebApi()
+            refresh()
         }
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
@@ -175,25 +172,18 @@ class HomeViewModel(
     /**
      * Refresh posts and update the UI state accordingly
      */
-    fun refreshPosts() {
-        // Ui state is refreshing
+    fun refresh() {
         viewModelState.update { it.copy(isLoading = true) }
-//
-//        viewModelScope.launch {
-//            val result = postsRepository.getPostsFeed()
-//            viewModelState.update {
-//                when (result) {
-//                    is Result.Success -> it.copy(postsFeed = result.data, isLoading = false)
-//                    is Result.Error -> {
-//                        val errorMessages = it.errorMessages + ErrorMessage(
-//                            id = UUID.randomUUID().mostSignificantBits,
-//                            messageId = R.string.load_error
-//                        )
-//                        it.copy(errorMessages = errorMessages, isLoading = false)
-//                    }
-//                }
-//            }
-//        }
+
+        val topics = selectedTopics.value
+        if (topics.isEmpty()) {
+            viewModelScope.launch {
+                requestQiitaWebApi()
+                requestConnpassWebApi()
+            }
+        } else {
+            requestApiBySelectedTopics(topics)
+        }
     }
 
     fun onSearchEvent() {
@@ -256,14 +246,18 @@ class HomeViewModel(
 
     fun updateSelectedTopics(topics: Set<TopicSelection>) {
         if (selectedTopics.value != topics) {
-            viewModelState.update { it.copy(isLoading = true) }
-            clearViewModelState()
-            selectedTopics.value = topics
-            viewModelScope.launch {
-                topics.forEach {
-                    requestQiitaWebApi(selectedKeyword = it.topic)
-                    requestConnpassWebApi(selectedKeyword = it.topic)
-                }
+            requestApiBySelectedTopics(topics)
+        }
+    }
+
+    private fun requestApiBySelectedTopics(topics: Set<TopicSelection>) {
+        viewModelState.update { it.copy(isLoading = true) }
+        clearViewModelState()
+        selectedTopics.value = topics
+        viewModelScope.launch {
+            topics.forEach {
+                requestQiitaWebApi(selectedKeyword = it.topic)
+                requestConnpassWebApi(selectedKeyword = it.topic)
             }
         }
     }
