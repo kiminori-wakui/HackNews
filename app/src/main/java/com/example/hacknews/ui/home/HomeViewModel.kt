@@ -24,17 +24,15 @@ import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import com.example.hacknews.R
 import com.example.hacknews.data.events.EventsRepository
+import com.example.hacknews.data.interests.TopicSelection
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.model.Metadata
 import com.example.hacknews.model.Item
 import com.example.hacknews.model.PostAuthor
 import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.utils.ErrorMessage
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -131,12 +129,14 @@ class HomeViewModel(
 
     private val viewModelState = MutableStateFlow(HomeViewModelState(isLoading = true))
 
+    private val selectedTopics = MutableStateFlow<Set<TopicSelection>>(setOf())
+
     private val postsObserver = Observer<List<Item>> { posts ->
-        updateViewModelState(recentPosts = posts)
+        updateViewModelState(posts = posts)
     }
 
     private val eventsObserver = Observer<List<Item>> { events ->
-        updateViewModelState(recentEvents = events)
+        updateViewModelState(events = events)
     }
 
     // UI state exposed to the UI
@@ -177,7 +177,7 @@ class HomeViewModel(
      */
     fun refreshPosts() {
         // Ui state is refreshing
-//        viewModelState.update { it.copy(isLoading = true) }
+        viewModelState.update { it.copy(isLoading = true) }
 //
 //        viewModelScope.launch {
 //            val result = postsRepository.getPostsFeed()
@@ -197,6 +197,7 @@ class HomeViewModel(
     }
 
     fun onSearchEvent() {
+        viewModelState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             requestQiitaWebApi()
             requestConnpassWebApi()
@@ -253,37 +254,86 @@ class HomeViewModel(
         }
     }
 
+    fun updateSelectedTopics(topics: Set<TopicSelection>) {
+        if (selectedTopics.value != topics) {
+            viewModelState.update { it.copy(isLoading = true) }
+            clearViewModelState()
+            selectedTopics.value = topics
+            viewModelScope.launch {
+                topics.forEach {
+                    requestQiitaWebApi(selectedKeyword = it.topic)
+                    requestConnpassWebApi(selectedKeyword = it.topic)
+                }
+            }
+        }
+    }
+
     /**
      * Notify that the user updated the search query
      */
     fun onSearchInputChanged(searchInput: String) {
+        clearViewModelState()
         viewModelState.update {
             it.copy(searchInput = searchInput)
         }
     }
 
-    private suspend fun requestQiitaWebApi() {
+    private suspend fun requestQiitaWebApi(selectedKeyword: String = "") {
         var keyword = ""
         val searchInput = viewModelState.value.searchInput
         if (searchInput.isNotBlank()) {
             keyword = "?query=$searchInput}"
+        } else if (selectedKeyword.isNotBlank()) {
+            keyword = "?query=$selectedKeyword}"
         }
         postsRepository.getPosts(WEB_API_KEY_QIITA + keyword, context)
+        delay(1000)
     }
 
-    private suspend fun requestConnpassWebApi() {
+    private suspend fun requestConnpassWebApi(selectedKeyword: String = "") {
         var keyword = ""
         val searchInput = viewModelState.value.searchInput
         if (searchInput.isNotBlank()) {
             keyword = "?keyword_or=$searchInput"
+        } else if (selectedKeyword.isNotBlank()) {
+            keyword = "?query=$selectedKeyword}"
         }
         eventsRepository.getEvents(WEB_API_KEY_CONNPASS + keyword, context)
+        delay(5000)
+    }
+
+    private fun clearViewModelState(
+        highlightedItem: Item? = null,
+        posts: List<Item>? = null,
+        events: List<Item>? = null
+    ) {
+        viewModelState.update {
+            it.copy(
+                itemsFeed = ItemsFeed(
+                    highlightedItem = highlightedItem ?: Item(
+                        id = "0",
+                        title = "none",
+                        url = "",
+                        metadata = Metadata(
+                            author = PostAuthor(name = "name"),
+                            date = "date",
+                            readTimeMinutes = 1
+                        ),
+                        imageId = R.drawable.post_4,
+                        imageThumbId = R.drawable.post_4_thumb
+                    ),
+                    recentPosts = posts ?: listOf(),
+                    recentEvents = events ?: listOf()
+                ),
+                isLoading = false
+            )
+        }
     }
 
     private fun updateViewModelState(
         highlightedItem: Item? = null,
-        recentPosts: List<Item>? = null,
-        recentEvents: List<Item>? = null
+        posts: List<Item>? = null,
+        events: List<Item>? = null
     ) {
         viewModelState.update {
             val itemsFeed = it.itemsFeed ?: ItemsFeed(
@@ -302,11 +352,18 @@ class HomeViewModel(
                 recentPosts = listOf(),
                 recentEvents = listOf()
             )
+            val recentPosts = posts?.let { list ->
+                itemsFeed.recentPosts + list
+            } ?: itemsFeed.recentPosts
+            val recentEvents = events?.let { list ->
+                itemsFeed.recentEvents + list
+            } ?: itemsFeed.recentEvents
+
             it.copy(
                 itemsFeed = ItemsFeed(
                     highlightedItem = highlightedItem ?: itemsFeed.highlightedItem,
-                    recentPosts = recentPosts ?: itemsFeed.recentPosts,
-                    recentEvents = recentEvents ?: itemsFeed.recentEvents
+                    recentPosts = recentPosts.distinct(),
+                    recentEvents = recentEvents.distinct()
                 ),
                 isLoading = false
             )

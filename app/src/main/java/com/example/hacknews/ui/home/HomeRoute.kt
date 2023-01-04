@@ -22,11 +22,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.*
 import com.example.hacknews.ui.article.ArticleScreen
+import com.example.hacknews.ui.interests.InterestsViewModel
 
 /**
  * Displays the Home route.
@@ -41,6 +39,7 @@ import com.example.hacknews.ui.article.ArticleScreen
 @Composable
 fun HomeRoute(
     homeViewModel: HomeViewModel,
+    interestsViewModel: InterestsViewModel,
     isExpandedScreen: Boolean,
     openDrawer: () -> Unit,
     onClickSearchIcon: () -> Unit,
@@ -48,6 +47,11 @@ fun HomeRoute(
 ) {
     // UiState of the HomeScreen
     val uiState by homeViewModel.uiState.collectAsState()
+    val selectedTopics by interestsViewModel.selectedTopics.collectAsState()
+
+    LaunchedEffect(selectedTopics) {
+        homeViewModel.updateSelectedTopics(selectedTopics)
+    }
 
     HomeRoute(
         uiState = uiState,

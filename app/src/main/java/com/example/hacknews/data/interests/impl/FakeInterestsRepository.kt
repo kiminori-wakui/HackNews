@@ -39,7 +39,16 @@ class FakeInterestsRepository : InterestsRepository {
             InterestSection("Android", listOf("Jetpack Compose", "Kotlin", "Jetpack")),
             InterestSection(
                 "Programming",
-                listOf("Kotlin", "Declarative UIs", "Java", "Unidirectional Data Flow", "C++")
+                listOf(
+                    "Kotlin",
+                    "Declarative UIs",
+                    "Java",
+                    "Unidirectional Data Flow",
+                    "C++",
+                    "PHP",
+                    "Ruby",
+                    "Python"
+                )
             ),
             InterestSection("Technology", listOf("Pixel", "Google"))
         )
