@@ -23,52 +23,20 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -92,7 +60,6 @@ import com.example.hacknews.R
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.posts.impl.BlockingFakePostsRepository
 import com.example.hacknews.model.Item
-import com.example.hacknews.model.ItemsFeed
 import com.example.hacknews.ui.article.postContentItems
 import com.example.hacknews.ui.article.sharePost
 import com.example.hacknews.ui.components.HacknewsSnackbarHost
@@ -117,9 +84,9 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun HomeFeedWithArticleDetailsScreen(
     uiState: HomeUiState,
+    homeTabContent: List<HomeTabContent>,
     showTopAppBar: Boolean,
     onToggleFavorite: (String) -> Unit,
-    onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     onInteractWithList: () -> Unit,
@@ -147,17 +114,12 @@ fun HomeFeedWithArticleDetailsScreen(
         val contentPadding = rememberContentPaddingForScreen(additionalTop = 8.dp)
         Row(contentModifier) {
             PostList(
-                postsFeed = hasPostsUiState.postsFeed,
-                favorites = hasPostsUiState.favorites,
+                homeTabContent = homeTabContent,
                 showExpandedSearch = !showTopAppBar,
-                onArticleTapped = onSelectPost,
-                onToggleFavorite = onToggleFavorite,
-                contentPadding = contentPadding,
                 modifier = Modifier
                     .width(334.dp)
                     .notifyInput(onInteractWithList)
-                    .imePadding(), // add padding for the on-screen keyboard
-                state = homeListLazyListState,
+                    .imePadding(),
                 searchInput = hasPostsUiState.searchInput,
                 onSearchInputChanged = onSearchInputChanged,
                 onSearch = onSearch,
@@ -223,9 +185,8 @@ private fun Modifier.notifyInput(block: () -> Unit): Modifier =
 @Composable
 fun HomeFeedScreen(
     uiState: HomeUiState,
+    homeTabContent: List<HomeTabContent>,
     showTopAppBar: Boolean,
-    onToggleFavorite: (String) -> Unit,
-    onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
@@ -247,18 +208,11 @@ fun HomeFeedScreen(
         homeListLazyListState = homeListLazyListState,
         scaffoldState = scaffoldState,
         modifier = modifier
-    ) { hasPostsUiState, contentModifier ->
+    ) { _, contentModifier ->
         PostList(
-            postsFeed = hasPostsUiState.postsFeed,
-            favorites = hasPostsUiState.favorites,
+            homeTabContent = homeTabContent,
             showExpandedSearch = !showTopAppBar,
-            onArticleTapped = onSelectPost,
-            onToggleFavorite = onToggleFavorite,
-            contentPadding = rememberContentPaddingForScreen(
-                additionalTop = if (showTopAppBar) 0.dp else 8.dp
-            ),
             modifier = contentModifier,
-            state = homeListLazyListState,
             searchInput = searchInput,
             onSearchInputChanged = onSearchInputChanged,
             onSearch = onSearch
@@ -404,63 +358,44 @@ private fun LoadingContent(
 
 /**
  * Display a feed of posts.
- *
- * When a post is clicked on, [onArticleTapped] will be called.
- *
- * @param postsFeed (state) the feed to display
- * @param onArticleTapped (event) request navigation to Article screen
+ **
  * @param modifier modifier for the root element
  */
 @Composable
 private fun PostList(
-    postsFeed: ItemsFeed,
-    favorites: Set<String>,
+    homeTabContent: List<HomeTabContent>,
     showExpandedSearch: Boolean,
-    onArticleTapped: (postId: String) -> Unit,
-    onToggleFavorite: (String) -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    state: LazyListState = rememberLazyListState(),
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
     onSearch: () -> Unit,
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = contentPadding,
-        state = state
-    ) {
+    val (currentSection, updateSection) = rememberSaveable {
+        mutableStateOf(homeTabContent.first().section)
+    }
+    val selectedTabIndex = homeTabContent.indexOfFirst { it.section == currentSection }
+    Column(modifier) {
         if (showExpandedSearch) {
-            item {
-                HomeSearch(
-                    Modifier.padding(horizontal = 16.dp),
-                    searchInput = searchInput,
-                    onSearchInputChanged = onSearchInputChanged,
-                    onSearch = onSearch
-                )
-            }
+            HomeSearch(
+                Modifier.padding(horizontal = 16.dp),
+                searchInput = searchInput,
+                onSearchInputChanged = onSearchInputChanged,
+                onSearch = onSearch
+            )
         }
-        item { PostListTopSection(postsFeed.highlightedItem, onArticleTapped) }
-        if (postsFeed.recentPosts.isNotEmpty()) {
-            item {
-                PostListSection(
-                    postsFeed.recentPosts,
-                    onArticleTapped,
-                    favorites,
-                    onToggleFavorite
-                )
-            }
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            backgroundColor = colors.onPrimary,
+            contentColor = colors.primary
+        ) {
+            HomeTabRowContent(selectedTabIndex, updateSection, homeTabContent)
         }
-        item { EventListTopSection() }
-        if (postsFeed.recentEvents.isNotEmpty()) {
-            item {
-                EventListSimpleSection(
-                    postsFeed.recentEvents,
-                    onArticleTapped,
-                    favorites,
-                    onToggleFavorite
-                )
-            }
+        Divider(
+            color = colors.onSurface.copy(alpha = 0.1f)
+        )
+        Box(modifier = Modifier.weight(1f)) {
+            // display the current tab content which is a @Composable () -> Unit
+            homeTabContent[selectedTabIndex].content()
         }
 //        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
 //            item {
@@ -472,6 +407,34 @@ private fun PostList(
 //        if (postsFeed.recentPosts.isNotEmpty()) {
 //            item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
 //        }
+    }
+}
+
+@Composable
+fun HomeTabRowContent(
+    selectedTabIndex: Int,
+    updateSection: (HomeSections) -> Unit,
+    tabContent: List<HomeTabContent>,
+    modifier: Modifier = Modifier
+) {
+    tabContent.forEachIndexed { index, content ->
+        val colorText = if (selectedTabIndex == index) {
+            colors.primary
+        } else {
+            colors.onSurface.copy(alpha = 0.8f)
+        }
+        Tab(
+            selected = selectedTabIndex == index,
+            onClick = { updateSection(content.section) },
+            modifier = Modifier.heightIn(min = 48.dp)
+        ) {
+            Text(
+                text = stringResource(id = content.section.titleResId),
+                color = colorText,
+                style = MaterialTheme.typography.subtitle2,
+                modifier = modifier.paddingFromBaseline(top = 20.dp)
+            )
+        }
     }
 }
 
@@ -510,74 +473,9 @@ private fun PostListTopSection(item: Item, navigateToArticle: (String) -> Unit) 
 }
 
 /**
- * Top section of [EventList]
- */
-@Composable
-private fun EventListTopSection() {
-    Text(
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        text = stringResource(id = R.string.home_hackers_event_section_title),
-        style = MaterialTheme.typography.subtitle1
-    )
-    PostListDivider()
-}
-
-/**
- * Full-width list items for [PostList]
- *
- * @param items (state) to display
- * @param navigateToArticle (event) request navigation to Article screen
- */
-@Composable
-private fun PostListSection(
-    items: List<Item>,
-    navigateToArticle: (String) -> Unit,
-    favorites: Set<String>,
-    onToggleFavorite: (String) -> Unit
-) {
-    Column {
-        items.forEach { post ->
-            PostCard(
-                item = post,
-                navigateToArticle = navigateToArticle,
-                isFavorite = favorites.contains(post.id),
-                onToggleFavorite = { onToggleFavorite(post.id) }
-            )
-            PostListDivider()
-        }
-    }
-}
-
-/**
- * Full-width list items for [PostList]
- *
- * @param events (state) to display
- * @param navigateToArticle (event) request navigation to Article screen
- */
-@Composable
-private fun EventListSimpleSection(
-    events: List<Item>,
-    navigateToArticle: (String) -> Unit,
-    favorites: Set<String>,
-    onToggleFavorite: (String) -> Unit
-) {
-    Column {
-        events.forEach { event ->
-            EventCardSimple(
-                item = event,
-                navigateToArticle = navigateToArticle,
-                isFavorite = favorites.contains(event.id),
-                onToggleFavorite = { onToggleFavorite(event.id) }
-            )
-            PostListDivider()
-        }
-    }
-}
-
-/**
  * Horizontal scrolling cards for [PostList]
  *
- * @param items (state) to display
+ * @param posts (state) to display
  * @param navigateToArticle (event) request navigation to Article screen
  */
 @Composable
@@ -628,10 +526,10 @@ private fun PostListHistorySection(
  * Full-width divider with padding for [PostList]
  */
 @Composable
-private fun PostListDivider() {
+fun PostListDivider() {
     Divider(
         modifier = Modifier.padding(horizontal = 14.dp),
-        color = MaterialTheme.colors.onSurface.copy(alpha = 0.08f)
+        color = colors.onSurface.copy(alpha = 0.08f)
     )
 }
 
@@ -648,7 +546,7 @@ private fun HomeSearch(
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(Dp.Hairline, MaterialTheme.colors.onSurface.copy(alpha = .6f)),
+        border = BorderStroke(Dp.Hairline, colors.onSurface.copy(alpha = .6f)),
         elevation = 4.dp,
         modifier = modifier.fillMaxWidth()
     ) {
@@ -658,7 +556,7 @@ private fun HomeSearch(
         ) {
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 IconButton(onClick = {
-                    val aaa = null
+                    // TODO: 検索ボタンタップイベント
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Search,
@@ -696,7 +594,7 @@ private fun HomeSearch(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 IconButton(onClick = {
-                    val aaa = null
+                    // TODO: 検索ボタンタップイベント
                 }) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
@@ -735,7 +633,7 @@ private fun PostTopBar(
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(Dp.Hairline, MaterialTheme.colors.onSurface.copy(alpha = .6f)),
+        border = BorderStroke(Dp.Hairline, colors.onSurface.copy(alpha = .6f)),
         modifier = modifier.padding(end = 16.dp)
     ) {
         Row(Modifier.padding(horizontal = 8.dp)) {
@@ -762,7 +660,7 @@ private fun HomeTopAppBar(
             Icon(
                 painter = painterResource(R.drawable.ic_hacknews_wordmark),
                 contentDescription = title,
-                tint = MaterialTheme.colors.onBackground,
+                tint = colors.onBackground,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = 4.dp, top = 10.dp)
@@ -773,7 +671,7 @@ private fun HomeTopAppBar(
                 Icon(
                     painter = painterResource(R.drawable.ic_hacknews_logo),
                     contentDescription = stringResource(R.string.cd_open_navigation_drawer),
-                    tint = MaterialTheme.colors.primary
+                    tint = colors.primary
                 )
             }
         },
@@ -788,7 +686,7 @@ private fun HomeTopAppBar(
                 )
             }
         },
-        backgroundColor = MaterialTheme.colors.surface,
+        backgroundColor = colors.surface,
         elevation = elevation
     )
 }
@@ -812,17 +710,16 @@ fun PreviewHomeListDrawerScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
+            homeTabContent = listOf(),
             showTopAppBar = false,
-            onToggleFavorite = {},
-            onSelectPost = {},
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
             onClickSearch = {},
+            onSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
             onSearchInputChanged = {},
-            onSearch = {}
         )
     }
 }
@@ -850,17 +747,16 @@ fun PreviewHomeListNavRailScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
+            homeTabContent = listOf(),
             showTopAppBar = true,
-            onToggleFavorite = {},
-            onSelectPost = {},
             onRefreshPosts = {},
             onErrorDismiss = {},
             openDrawer = {},
             onClickSearch = {},
+            onSearch = {},
             homeListLazyListState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState(),
             onSearchInputChanged = {},
-            onSearch = {}
         )
     }
 }
@@ -884,9 +780,9 @@ fun PreviewHomeListDetailScreen() {
                 errorMessages = emptyList(),
                 searchInput = ""
             ),
+            homeTabContent = listOf(),
             showTopAppBar = true,
             onToggleFavorite = {},
-            onSelectPost = {},
             onRefreshPosts = {},
             onErrorDismiss = {},
             onInteractWithList = {},
@@ -901,7 +797,7 @@ fun PreviewHomeListDetailScreen() {
             },
             scaffoldState = rememberScaffoldState(),
             onSearchInputChanged = {},
-            onSearch = {}
+            onSearch = {},
         )
     }
 }

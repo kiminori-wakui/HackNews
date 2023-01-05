@@ -188,6 +188,7 @@ class HomeViewModel(
 
     fun onSearchEvent() {
         viewModelState.update { it.copy(isLoading = true) }
+        // refresh to reflect Interests
         viewModelScope.launch {
             requestQiitaWebApi()
             requestConnpassWebApi()
@@ -246,19 +247,10 @@ class HomeViewModel(
 
     fun updateSelectedTopics(topics: Set<TopicSelection>) {
         if (selectedTopics.value != topics) {
-            requestApiBySelectedTopics(topics)
-        }
-    }
+            clearViewModelState()
+            selectedTopics.value = topics
 
-    private fun requestApiBySelectedTopics(topics: Set<TopicSelection>) {
-        viewModelState.update { it.copy(isLoading = true) }
-        clearViewModelState()
-        selectedTopics.value = topics
-        viewModelScope.launch {
-            topics.forEach {
-                requestQiitaWebApi(selectedKeyword = it.topic)
-                requestConnpassWebApi(selectedKeyword = it.topic)
-            }
+            refresh()
         }
     }
 
@@ -361,6 +353,15 @@ class HomeViewModel(
                 ),
                 isLoading = false
             )
+        }
+    }
+
+    private fun requestApiBySelectedTopics(topics: Set<TopicSelection>) {
+        viewModelScope.launch {
+            topics.forEach {
+                requestQiitaWebApi(selectedKeyword = it.topic)
+                requestConnpassWebApi(selectedKeyword = it.topic)
+            }
         }
     }
 

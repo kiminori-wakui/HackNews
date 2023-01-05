@@ -25,11 +25,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,6 +72,7 @@ import com.example.hacknews.data.Result
 import com.example.hacknews.data.interests.InterestSection
 import com.example.hacknews.data.interests.TopicSelection
 import com.example.hacknews.data.interests.impl.FakeInterestsRepository
+import com.example.hacknews.ui.base.tabContainerModifier
 import com.example.hacknews.ui.theme.HacknewsTheme
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
@@ -231,14 +230,6 @@ private fun InterestScreenContent(
         }
     }
 }
-
-/**
- * Modifier for UI containers that show interests items
- */
-private val tabContainerModifier = Modifier
-    .fillMaxWidth()
-    .wrapContentWidth(Alignment.CenterHorizontally)
-    .navigationBarsPadding()
 
 /**
  * Display a simple list of topics

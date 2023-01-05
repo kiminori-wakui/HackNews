@@ -33,6 +33,8 @@
 
     <!-- Home Screen -->
     <string name="home_title">Home</string>
+    <string name="home_section_post">Post</string>
+    <string name="home_section_event">Event</string>
     <string name="home_tap_to_load_content">Tap to load content</string>
     <string name="home_hackers_post_section_title">Hackers Post</string>
     <string name="home_hackers_event_section_title">Hackers Event</string>

@@ -17,14 +17,38 @@
 package com.example.hacknews.ui.home
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
+import com.example.hacknews.R
+import com.example.hacknews.model.Item
 import com.example.hacknews.ui.article.ArticleScreen
-import com.example.hacknews.ui.interests.InterestsViewModel
+import com.example.hacknews.ui.base.tabContainerModifier
+import com.example.hacknews.ui.interests.*
+
+enum class HomeSections(@StringRes val titleResId: Int) {
+    Post(R.string.home_section_post),
+    Event(R.string.home_section_event)
+}
+
+/**
+ * TabContent for a single tab of the screen.
+ *
+ * This is intended to encapsulate a tab & it's content as a single object. It was added to avoid
+ * passing several parameters per-tab from the stateful composable to the composable that displays
+ * the current tab.
+ *
+ * @param section the tab that this content is for
+ * @param section content of the tab, a composable that describes the content
+ */
+class HomeTabContent(val section: HomeSections, val content: @Composable () -> Unit)
 
 /**
  * Displays the Home route.
@@ -48,6 +72,7 @@ fun HomeRoute(
     // UiState of the HomeScreen
     val uiState by homeViewModel.uiState.collectAsState()
     val selectedTopics by interestsViewModel.selectedTopics.collectAsState()
+    val tabContent = rememberHomeTabContent(homeViewModel, uiState)
 
     LaunchedEffect(selectedTopics) {
         homeViewModel.updateSelectedTopics(selectedTopics)
@@ -55,9 +80,9 @@ fun HomeRoute(
 
     HomeRoute(
         uiState = uiState,
+        homeTabContent = tabContent,
         isExpandedScreen = isExpandedScreen,
         onToggleFavorite = { homeViewModel.toggleFavourite(it) },
-        onSelectPost = { homeViewModel.selectArticle(it) },
         onRefreshPosts = { homeViewModel.refresh() },
         onErrorDismiss = { homeViewModel.errorShown(it) },
         onInteractWithFeed = { homeViewModel.interactedWithFeed() },
@@ -71,6 +96,40 @@ fun HomeRoute(
 }
 
 /**
+ * Remembers the content for each tab on the Home screen
+ * gathering application data from [InterestsViewModel]
+ */
+@Composable
+fun rememberHomeTabContent(homeViewModel: HomeViewModel, uiState: HomeUiState): List<HomeTabContent> {
+    var favorites = setOf("")
+    var recentPosts = listOf<Item>()
+    var recentEvent = listOf<Item>()
+    if (uiState is HomeUiState.HasPosts) {
+        favorites = uiState.favorites
+        recentPosts = uiState.postsFeed.recentPosts
+        recentEvent = uiState.postsFeed.recentEvents
+    }
+
+    val postSection = HomeTabContent(HomeSections.Post) {
+        PostListSection(
+            recentPosts,
+            { homeViewModel.selectArticle(it) },
+            favorites,
+        ) { homeViewModel.toggleFavourite(it) }
+    }
+
+    val eventSection = HomeTabContent(HomeSections.Event) {
+        EventListSimpleSection(
+            recentEvent,
+            { homeViewModel.selectArticle(it) },
+            favorites,
+        ) { homeViewModel.toggleFavourite(it) }
+    }
+
+    return listOf(postSection, eventSection)
+}
+
+/**
  * Displays the Home route.
  *
  * This composable is not coupled to any specific state management.
@@ -78,7 +137,6 @@ fun HomeRoute(
  * @param uiState (state) the data to show on the screen
  * @param isExpandedScreen (state) whether the screen is expanded
  * @param onToggleFavorite (event) toggles favorite for a post
- * @param onSelectPost (event) indicate that a post was selected
  * @param onRefreshPosts (event) request a refresh of posts
  * @param onErrorDismiss (event) error message was shown
  * @param onInteractWithFeed (event) indicate that the feed was interacted with
@@ -91,9 +149,9 @@ fun HomeRoute(
 @Composable
 fun HomeRoute(
     uiState: HomeUiState,
+    homeTabContent: List<HomeTabContent>,
     isExpandedScreen: Boolean,
     onToggleFavorite: (String) -> Unit,
-    onSelectPost: (String) -> Unit,
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     onInteractWithFeed: () -> Unit,
@@ -102,7 +160,7 @@ fun HomeRoute(
     openDrawer: () -> Unit,
     onClickSearchIcon: () -> Unit,
     onSearch: () -> Unit,
-    scaffoldState: ScaffoldState
+    scaffoldState: ScaffoldState,
 ) {
     // Construct the lazy list states for the list and the details outside of deciding which one to
     // show. This allows the associated state to survive beyond that decision, and therefore
@@ -117,14 +175,13 @@ fun HomeRoute(
         }
     }
 
-    val homeScreenType = getHomeScreenType(isExpandedScreen, uiState)
-    when (homeScreenType) {
+    when (getHomeScreenType(isExpandedScreen, uiState)) {
         HomeScreenType.FeedWithArticleDetails -> {
             HomeFeedWithArticleDetailsScreen(
                 uiState = uiState,
+                homeTabContent = homeTabContent,
                 showTopAppBar = !isExpandedScreen,
                 onToggleFavorite = onToggleFavorite,
-                onSelectPost = onSelectPost,
                 onRefreshPosts = onRefreshPosts,
                 onErrorDismiss = onErrorDismiss,
                 onInteractWithList = onInteractWithFeed,
@@ -141,9 +198,8 @@ fun HomeRoute(
         HomeScreenType.Feed -> {
             HomeFeedScreen(
                 uiState = uiState,
+                homeTabContent = homeTabContent,
                 showTopAppBar = !isExpandedScreen,
-                onToggleFavorite = onToggleFavorite,
-                onSelectPost = onSelectPost,
                 onRefreshPosts = onRefreshPosts,
                 onErrorDismiss = onErrorDismiss,
                 openDrawer = openDrawer,
@@ -177,6 +233,58 @@ fun HomeRoute(
             BackHandler {
                 onInteractWithFeed()
             }
+        }
+    }
+}
+
+/**
+ * Full-width list items for [PostList]
+ *
+ * @param items (state) to display
+ * @param navigateToArticle (event) request navigation to Article screen
+ */
+@Composable
+private fun PostListSection(
+    items: List<Item>,
+    navigateToArticle: (String) -> Unit,
+    favorites: Set<String>,
+    onToggleFavorite: (String) -> Unit
+) {
+    Column(tabContainerModifier.verticalScroll(rememberScrollState())) {
+        items.forEach { post ->
+            PostCard(
+                item = post,
+                navigateToArticle = navigateToArticle,
+                isFavorite = favorites.contains(post.id),
+                onToggleFavorite = { onToggleFavorite(post.id) }
+            )
+            PostListDivider()
+        }
+    }
+}
+
+/**
+ * Full-width list items for [PostList]
+ *
+ * @param events (state) to display
+ * @param navigateToArticle (event) request navigation to Article screen
+ */
+@Composable
+private fun EventListSimpleSection(
+    events: List<Item>,
+    navigateToArticle: (String) -> Unit,
+    favorites: Set<String>,
+    onToggleFavorite: (String) -> Unit
+) {
+    Column(tabContainerModifier.verticalScroll(rememberScrollState())) {
+        events.forEach { event ->
+            EventCardSimple(
+                item = event,
+                navigateToArticle = navigateToArticle,
+                isFavorite = favorites.contains(event.id),
+                onToggleFavorite = { onToggleFavorite(event.id) }
+            )
+            PostListDivider()
         }
     }
 }
