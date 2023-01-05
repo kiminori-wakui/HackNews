@@ -180,25 +180,26 @@ fun rememberTabContent(interestsViewModel: InterestsViewModel): List<TabContent>
         )
     }
 
-    val peopleSection = TabContent(Sections.People) {
-        val selectedPeople by interestsViewModel.selectedPeople.collectAsState()
-        TabWithTopics(
-            topics = uiState.people,
-            selectedTopics = selectedPeople,
-            onTopicSelect = { interestsViewModel.togglePersonSelected(it) }
-        )
-    }
-
-    val publicationSection = TabContent(Sections.Publications) {
-        val selectedPublications by interestsViewModel.selectedPublications.collectAsState()
-        TabWithTopics(
-            topics = uiState.publications,
-            selectedTopics = selectedPublications,
-            onTopicSelect = { interestsViewModel.togglePublicationSelected(it) }
-        )
-    }
-
-    return listOf(topicsSection, peopleSection, publicationSection)
+//    val peopleSection = TabContent(Sections.People) {
+//        val selectedPeople by interestsViewModel.selectedPeople.collectAsState()
+//        TabWithTopics(
+//            topics = uiState.people,
+//            selectedTopics = selectedPeople,
+//            onTopicSelect = { interestsViewModel.togglePersonSelected(it) }
+//        )
+//    }
+//
+//    val publicationSection = TabContent(Sections.Publications) {
+//        val selectedPublications by interestsViewModel.selectedPublications.collectAsState()
+//        TabWithTopics(
+//            topics = uiState.publications,
+//            selectedTopics = selectedPublications,
+//            onTopicSelect = { interestsViewModel.togglePublicationSelected(it) }
+//        )
+//    }
+//
+//    return listOf(topicsSection, peopleSection, publicationSection)
+    return listOf(topicsSection)
 }
 
 /**
