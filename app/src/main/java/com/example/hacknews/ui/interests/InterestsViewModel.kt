@@ -80,8 +80,8 @@ class InterestsViewModel(
         val prefUtil = PreferencesUtil(context)
         val selectionJson = prefUtil.getSelectionTopicToken()
         val topicSelection = Gson().fromJson(selectionJson, TopicSelectionSet::class.java)
-        topicSelection.topics.let {
-            interestsRepository.putSelectedTopics(it)
+        if (topicSelection != null && topicSelection.topics.isNotEmpty()) {
+            interestsRepository.putSelectedTopics(topicSelection.topics)
         }
         refreshAll()
     }
