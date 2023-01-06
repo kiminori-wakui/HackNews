@@ -262,26 +262,26 @@ class HomeViewModel(
     }
 
     private suspend fun requestQiitaWebApi(selectedKeyword: String = "") {
-        var keyword = ""
+        var option = "?page=1"
         val searchInput = viewModelState.value.searchInput
         if (searchInput.isNotBlank()) {
-            keyword = "?query=$searchInput}"
+            option += "&query=$searchInput"
         } else if (selectedKeyword.isNotBlank()) {
-            keyword = "?query=$selectedKeyword}"
+            option += "&query=$selectedKeyword"
         }
-        postsRepository.getPosts(WEB_API_KEY_QIITA + keyword, context)
+        postsRepository.getPosts(WEB_API_KEY_QIITA + option, context)
         delay(1000)
     }
 
     private suspend fun requestConnpassWebApi(selectedKeyword: String = "") {
-        var keyword = ""
+        var option = "?order=2&count=20"
         val searchInput = viewModelState.value.searchInput
         if (searchInput.isNotBlank()) {
-            keyword = "?keyword_or=$searchInput"
+            option += "&keyword_or=$searchInput"
         } else if (selectedKeyword.isNotBlank()) {
-            keyword = "?query=$selectedKeyword}"
+            option += "&keyword_or=$selectedKeyword"
         }
-        eventsRepository.getEvents(WEB_API_KEY_CONNPASS + keyword, context)
+        eventsRepository.getEvents(WEB_API_KEY_CONNPASS + option, context)
         delay(5000)
     }
 
