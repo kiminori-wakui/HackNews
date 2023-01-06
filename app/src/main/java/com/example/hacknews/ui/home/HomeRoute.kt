@@ -28,10 +28,13 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import com.example.hacknews.R
+import com.example.hacknews.data.interests.TopicSelectionSet
 import com.example.hacknews.model.Item
 import com.example.hacknews.ui.article.ArticleScreen
 import com.example.hacknews.ui.base.tabContainerModifier
 import com.example.hacknews.ui.interests.*
+import com.example.hacknews.utils.PreferencesUtil
+import com.google.gson.Gson
 
 enum class HomeSections(@StringRes val titleResId: Int) {
     Post(R.string.home_section_post),
@@ -75,7 +78,15 @@ fun HomeRoute(
     val tabContent = rememberHomeTabContent(homeViewModel, uiState)
 
     LaunchedEffect(selectedTopics) {
-        homeViewModel.updateSelectedTopics(selectedTopics)
+        val prefUtil = PreferencesUtil(interestsViewModel.context)
+        val selectionJson = prefUtil.getSelectionTopicToken()
+        if (selectionJson != null) {
+            val topicSelection = Gson().fromJson(selectionJson, TopicSelectionSet::class.java)
+            topicSelection ?: return@LaunchedEffect
+            homeViewModel.updateSelectedTopics(topicSelection.topics)
+        } else {
+            homeViewModel.updateSelectedTopics(selectedTopics)
+        }
     }
 
     HomeRoute(

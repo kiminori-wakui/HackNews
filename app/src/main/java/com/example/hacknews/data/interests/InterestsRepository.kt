@@ -70,6 +70,13 @@ interface InterestsRepository {
      * Currently selected publications
      */
     fun observePublicationSelected(): Flow<Set<String>>
+
+    /**
+     * Put currently selected topics
+     */
+    fun putSelectedTopics(topics: Set<TopicSelection>)
 }
 
 data class TopicSelection(val section: String, val topic: String)
+
+data class TopicSelectionSet(val topics: Set<TopicSelection>)

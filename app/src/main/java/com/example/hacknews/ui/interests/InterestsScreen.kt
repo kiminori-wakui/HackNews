@@ -47,10 +47,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,9 +68,13 @@ import com.example.hacknews.R
 import com.example.hacknews.data.Result
 import com.example.hacknews.data.interests.InterestSection
 import com.example.hacknews.data.interests.TopicSelection
-import com.example.hacknews.data.interests.impl.FakeInterestsRepository
+import com.example.hacknews.data.interests.TopicSelectionSet
+import com.example.hacknews.data.interests.impl.InterestsRepositoryImpl
 import com.example.hacknews.ui.base.tabContainerModifier
 import com.example.hacknews.ui.theme.HacknewsTheme
+import com.example.hacknews.utils.PreferencesUtil
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 
@@ -173,6 +174,16 @@ fun rememberTabContent(interestsViewModel: InterestsViewModel): List<TabContent>
     // Pass them to the stateless InterestsScreen using a tabContent.
     val topicsSection = TabContent(Sections.Topics) {
         val selectedTopics by interestsViewModel.selectedTopics.collectAsState()
+        LaunchedEffect(selectedTopics) {
+            val gson = GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+            val topicSelectionSet = TopicSelectionSet(selectedTopics)
+            val jsonStr = gson.toJson(topicSelectionSet)
+            val prefUtil = PreferencesUtil(interestsViewModel.context)
+            prefUtil.setSelectionTopicToken(jsonStr)
+        }
+
         TabWithSections(
             sections = uiState.topics,
             selectedTopics = selectedTopics,
@@ -536,7 +547,7 @@ fun PreviewInterestsScreenNavRail() {
 @Composable
 fun PreviewTopicsTab() {
     val topics = runBlocking {
-        (FakeInterestsRepository().getTopics() as Result.Success).data
+        (InterestsRepositoryImpl().getTopics() as Result.Success).data
     }
     HacknewsTheme {
         Surface {
@@ -550,7 +561,7 @@ fun PreviewTopicsTab() {
 @Composable
 fun PreviewPeopleTab() {
     val people = runBlocking {
-        (FakeInterestsRepository().getPeople() as Result.Success).data
+        (InterestsRepositoryImpl().getPeople() as Result.Success).data
     }
     HacknewsTheme {
         Surface {
@@ -564,7 +575,7 @@ fun PreviewPeopleTab() {
 @Composable
 fun PreviewPublicationsTab() {
     val publications = runBlocking {
-        (FakeInterestsRepository().getPublications() as Result.Success).data
+        (InterestsRepositoryImpl().getPublications() as Result.Success).data
     }
     HacknewsTheme {
         Surface {
@@ -574,7 +585,7 @@ fun PreviewPublicationsTab() {
 }
 
 private fun getFakeTabsContent(): List<TabContent> {
-    val interestsRepository = FakeInterestsRepository()
+    val interestsRepository = InterestsRepositoryImpl()
     val topicsSection = TabContent(Sections.Topics) {
         TabWithSections(
             runBlocking { (interestsRepository.getTopics() as Result.Success).data },

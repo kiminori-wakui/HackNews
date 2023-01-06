@@ -32,7 +32,7 @@ import kotlinx.coroutines.sync.withLock
  * topics, people and publications synchronously.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class FakeInterestsRepository : InterestsRepository {
+class InterestsRepositoryImpl : InterestsRepository {
 
     private val topics by lazy {
         listOf(
@@ -131,4 +131,8 @@ class FakeInterestsRepository : InterestsRepository {
     override fun observePeopleSelected(): Flow<Set<String>> = selectedPeople
 
     override fun observePublicationSelected(): Flow<Set<String>> = selectedPublications
+
+    override fun putSelectedTopics(topics: Set<TopicSelection>) {
+        selectedTopics.value = topics
+    }
 }

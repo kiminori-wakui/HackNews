@@ -152,8 +152,6 @@ class HomeViewModel(
         runBlocking {
             postsRepository.posts.observeForever(postsObserver)
             eventsRepository.events.observeForever(eventsObserver)
-
-            refresh()
         }
         // Observe for favorite changes in the repo layer
         viewModelScope.launch {
@@ -249,9 +247,8 @@ class HomeViewModel(
         if (selectedTopics.value != topics) {
             clearViewModelState()
             selectedTopics.value = topics
-
-            refresh()
         }
+        refresh()
     }
 
     /**

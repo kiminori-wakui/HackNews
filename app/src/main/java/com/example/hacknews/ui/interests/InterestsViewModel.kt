@@ -16,13 +16,17 @@
 
 package com.example.hacknews.ui.interests
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.hacknews.data.interests.InterestSection
 import com.example.hacknews.data.interests.InterestsRepository
 import com.example.hacknews.data.interests.TopicSelection
+import com.example.hacknews.data.interests.TopicSelectionSet
 import com.example.hacknews.data.successOr
+import com.example.hacknews.utils.PreferencesUtil
+import com.google.gson.Gson
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,7 +47,8 @@ data class InterestsUiState(
 )
 
 class InterestsViewModel(
-    private val interestsRepository: InterestsRepository
+    private val interestsRepository: InterestsRepository,
+    val context: Context
 ) : ViewModel() {
 
     // UI state exposed to the UI
@@ -72,6 +77,12 @@ class InterestsViewModel(
         )
 
     init {
+        val prefUtil = PreferencesUtil(context)
+        val selectionJson = prefUtil.getSelectionTopicToken()
+        val topicSelection = Gson().fromJson(selectionJson, TopicSelectionSet::class.java)
+        topicSelection.topics.let {
+            interestsRepository.putSelectedTopics(it)
+        }
         refreshAll()
     }
 
@@ -127,10 +138,11 @@ class InterestsViewModel(
     companion object {
         fun provideFactory(
             interestsRepository: InterestsRepository,
+            context: Context,
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return InterestsViewModel(interestsRepository) as T
+                return InterestsViewModel(interestsRepository, context) as T
             }
         }
     }

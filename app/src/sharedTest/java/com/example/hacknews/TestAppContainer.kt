@@ -18,8 +18,10 @@ package com.example.hacknews
 
 import android.content.Context
 import com.example.hacknews.data.AppContainer
+import com.example.hacknews.data.events.EventsRepository
+import com.example.hacknews.data.events.impl.EventsRepositoryImpl
 import com.example.hacknews.data.interests.InterestsRepository
-import com.example.hacknews.data.interests.impl.FakeInterestsRepository
+import com.example.hacknews.data.interests.impl.InterestsRepositoryImpl
 import com.example.hacknews.data.posts.PostsRepository
 import com.example.hacknews.data.posts.impl.BlockingFakePostsRepository
 
@@ -29,7 +31,11 @@ class TestAppContainer(private val context: Context) : AppContainer {
         BlockingFakePostsRepository()
     }
 
+    override val eventsRepository: EventsRepository by lazy {
+        EventsRepositoryImpl()
+    }
+
     override val interestsRepository: InterestsRepository by lazy {
-        FakeInterestsRepository()
+        InterestsRepositoryImpl()
     }
 }

@@ -42,8 +42,9 @@ fun HackNewsNavGraph(
     onClickSearch: () -> Unit = {},
     startDestination: String = HacknewsDestinations.HOME_ROUTE
 ) {
+    val context = LocalContext.current
     val interestsViewModel: InterestsViewModel = viewModel(
-        factory = InterestsViewModel.provideFactory(appContainer.interestsRepository)
+        factory = InterestsViewModel.provideFactory(appContainer.interestsRepository, context)
     )
     NavHost(
         navController = navController,
@@ -51,7 +52,6 @@ fun HackNewsNavGraph(
         modifier = modifier
     ) {
         composable(HacknewsDestinations.HOME_ROUTE) {
-            val context = LocalContext.current
             val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModel.provideFactory(
                     appContainer.postsRepository,
