@@ -1,116 +1,143 @@
-# Hacknews sample
-Hacknews is a news reading app for Hackers, built with
-[Jetpack Compose](https://developer.android.com/jetpack/compose). The goal of the sample is to
-showcase the current UI capabilities of Compose.
+# Hacknews
+Hacknews は、ハッカー向けのニュース リーディング アプリです。  
+<br>
 
-To try out this sample app, you need to use 
-[Android Studio Chipmunk](https://developer.android.com/studio).
-You can clone this repository or import the
-project from Android Studio following the steps
-[here](https://developer.android.com/jetpack/compose/setup#sample).
+## 仕様概要
+記事一覧、イベント一覧、インタレスティング画面の 3 つの画面が含まれています。
+興味のあるトピックを購読します。 記事一覧から興味のある項目へのWebナビゲーション
+イベント一覧からイベント情報の閲覧ができます。
+インタレスティング画面では興味のあるキーワードを選択して、選択したキーワードの記事・イベント一覧を取得できます。
+<br>  
+<br>
 
-## Screenshots
+### 使用ライブラリ
+[Jetpack Compose](https://developer.android.com/jetpack/compose)   
+[Jetpack Live Data](https://developer.android.com/topic/libraries/architecture/livedata?hl=ja)   
+[Jetpack Flow](https://developer.android.com/kotlin/flow?hl=ja#jetpack)   
+[Volley](https://developer.android.com/training/volley?hl=ja)   
+[Gson](https://github.com/google/gson)   
 
-<img src="screenshots/hacknews_demo.gif" alt="Screenshot">
+<br>
+<br>
 
-## Features
+### 動作手順
+<br>
 
-This sample contains three screens: a list of articles, a detail page for articles, and a page to
-subscribe to topics of interest. The navigation from the the list of articles to the interests
-screen uses a navigation drawer.
+#### ①[Git](https://git-scm.com/)クローン
+当プロジェクトをクローンします。
+<br>
 
-### App scaffolding
+#### ②[Android Studio](https://developer.android.com/studio)  のインストール
+Android studioインストール後に当プロジェクトをビルド・実行
 
-Package [`com.example.hacknews.ui`][1]
+<br>
+<br>
 
-[`HacknewsApp.kt`][2] arranges the different screens in the `NavDrawerLayout`. 
+### アプリの実装
+パッケージ [`com.example.hacknews.ui`][1]
 
-[`HacknewsNavGraph.kt`][3] configures the navigation routes and actions in the app. 
+[`HacknewsApp.kt`][2] `NavDrawerLayout` でさまざまな画面を配置します。
+
+[`HacknewsNavGraph.kt`][3] アプリ内のナビゲーション ルートとアクションを構成します。
 
 [1]: app/src/main/java/com/example/hacknews/ui
 [2]: app/src/main/java/com/example/hacknews/ui/HacknewsApp.kt
 [3]: app/src/main/java/com/example/hacknews/ui/HacknewsNavGraph.kt
+<br>
+<br>
 
-### Main article list
+### 記事・イベント一覧画面
+<br>
 
-Package [`com.example.hacknews.ui.home`][4]
+パッケージ [`com.example.hacknews.ui.home`][4]
 
-This screen shows how to create different custom Composable functions and combine them in a list
-that scrolls vertically and horizontally.
+これらの画面は、記事・イベント一覧情報を表示します。  
+タブによって切り替わり縦にスクロールします。  
 
-See how to:
+[4]: app/src/main/java/com/example/hacknews/ui/home  
+<br>
 
-* Use `Row`s and `Column`s to arrange the contents of the UI
-* Add an `AppBar`
-* Use `MaterialTypography` and opacity to style the text
-* Use `Shape` to round the corners of the images
-* Use elevation to make the `Card`s stand out from the background
+|  記事一覧  |  イベント一覧  |
+| :--: | :--: |
+| <img src="screenshots/home_post.png" width="60%"> | <img src="screenshots/home_event.png" width="60%"> |
 
-[4]: app/src/main/java/com/example/hacknews/ui/home
+<br>
+<br>
+<br>
+<br>
 
-### Article detail
+### 記事・イベント一覧画面（検索モード）
 
-Package [`com.example.hacknews.ui.article`][5]
+パッケージ [`com.example.hacknews.ui.home`][7]
 
-This screen dives into the Text API, showing how to use different fonts than the ones defined in
-[`Typograhy`][6]. It also adds a bottom appbar, with custom actions.
+テキストボックス内に入力されたキーワードを元に記事・イベント情報を出力します。
 
-[5]: app/src/main/java/com/example/hacknews/ui/article
-[6]: app/src/main/java/com/example/hacknews/ui/theme/Type.kt
+<br>
 
-### Interests screen
+|  検索  |
+| :-- |
+| <img src="screenshots/home_mode_find.png" width="30%"> |
 
-Package [`com.example.hacknews.ui.interests`][7]
+<br>
+<br>
+<br>
+<br>
 
-This screens shows how to use Tabs and switch content depending on the selected tab. It
-also includes a custom checkbox button, [SelectTopicButton][8]
-that uses a `Toggleable` composable function to provide
-the on/off behaviour and semantics, while drawing a custom UI. The UI of the button is partly
-drawn with low-level primitives and partly overlaying images. See also how to visualize
-on and off, light and dark version in the Android Studio Preview.
+### インタレスティング画面
+
+パッケージ [`com.example.hacknews.ui.interests`][7]
+
+この画面は、タブの使用方法と、選択したタブに応じてコンテンツを切り替える方法を示しています。 これ
+カスタム チェックボックス ボタン [SelectTopicButton][8] も含まれます。
+「Toggleable」構成可能関数を使用して提供する
+カスタム UI を描画する際のオン/オフのアクション時プリファレンスに保持され、記事・イベント一覧画面遷移、次回起動時にキーワードの情報が反映されます。
 
 [7]: app/src/main/java/com/example/hacknews/ui/interests
 [8]: app/src/main/java/com/example/hacknews/ui/interests/SelectTopicButton.kt
+<br>
 
-### Data
+|  インタレスティング  |
+| :-- |
+| <img src="screenshots/interests.png" width="30%"> |
 
-The data in the sample is static, held in the `com.example.hacknews.data` package.
+<br>
+<br>
+<br>
+<br>
 
-### Instrumented and Robolectric tests
+### データ
+記事情報：ITエンジニア向けコミュニティサービス[Qiita](https://qiita.com/)  
+イベント情報：ITエンジニア向けイベントサイト[CONNPASS](https://connpass.com/)  
+<br>
+<br>
 
-UI tests can be run on device/emulators or on JVM with Robolectric.
+### インストルメント化された Robolectric テスト
 
-* To run Instrumented tests use the "Instrumented tests" run configuration or run the `./gradlew connectedCheck` command.
-* To run tests with Robolectric use the "Robolectric tests" run configuration or run the `./gradlew testDebug` command.
+UI テストは、デバイス/エミュレーター、または Robolectric を使用した JVM で実行できます。
 
-## Hacknews for every screen
+* 計装テストを実行するには、「計装テスト」実行構成を使用するか、`./gradlew connectedCheck` コマンドを実行します。
+* Robolectric でテストを実行するには、「Robolectric テスト」実行構成を使用するか、`./gradlew testDebug` コマンドを実行します。  
 
-<img src="screenshots/hacknews_all_screens.png" alt="Screenshot">
+<br>
+<br>
+<br>
+<br>
 
-We recently updated Hacknews to enhance its behavior across all mobile devices, both big and small.
-Hacknews already had support for “traditional” mobile screens, so it was tempting to describe all of
-our changes as “adding large screen support.” While that is true, it misses the point of having
-adaptive UI. For example, if your app is running in split screen mode on a tablet, it shouldn't try
-to display “tablet UI” unless it actually has enough space for it. With all of these changes,
-Hacknews is working better than ever on large screens, but also on small screens too.
 
-Check out the blog post that explains all the changes in more details:
-https://medium.com/androiddevelopers/hacknews-for-every-screen-4d8e7927752
-
-## License
+## ライセンス
 
 ```
-Copyright 2021 The Android Open Source Project
+Copyright 2022 WakuWaku プロジェクト
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Apache ライセンス、バージョン 2.0 (「ライセンス」) の下でライセンス供与されています。
+ライセンスに準拠しない限り、このファイルを使用することはできません。
+ライセンスのコピーは、次の URL で入手できます。
 
-    https://www.apache.org/licenses/LICENSE-2.0
+     https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+適用法で義務付けられている場合、または書面で同意されている場合を除き、ソフトウェア
+ライセンスに基づいて配布されるものは、「現状のまま」で配布されます。
+明示または黙示を問わず、いかなる種類の保証または条件もありません。
+権限を管理する特定の言語については、ライセンスを参照してください。
+ライセンスに基づく制限。
 ```
