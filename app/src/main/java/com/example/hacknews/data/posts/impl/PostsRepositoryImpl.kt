@@ -80,6 +80,15 @@ class PostsRepositoryImpl : PostsRepository {
                         val url = post.getString("url")
                         val user = post.getJSONObject("user")
                         val imageUrl = user.getString("profile_image_url")
+                        val tags = post.getJSONArray("tags")
+                        var tagsName = ""
+                        for (j in 0 until tags.length()) {
+                            val tag = tags.getJSONObject(j)
+                            if (j > 0) {
+                                tagsName += ", "
+                            }
+                            tagsName += tag.getString("name")
+                        }
                         items.add(
                             Item(
                                 id = "84eb677660d9",
@@ -88,7 +97,7 @@ class PostsRepositoryImpl : PostsRepository {
                                 url = url,
                                 publication = publication,
                                 metadata = Metadata(
-                                    author = PostAuthor(name = "name"),
+                                    author = PostAuthor(name = tagsName),
                                     date = "date",
                                     readTimeMinutes = 1
                                 ),

@@ -59,13 +59,7 @@ fun AuthorAndReadTime(
     Row(modifier) {
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
-                text = stringResource(
-                    id = R.string.home_post_min_read,
-                    formatArgs = arrayOf(
-                        item.metadata.author.name,
-                        item.metadata.readTimeMinutes
-                    )
-                ),
+                text = item.metadata.author.name,
                 style = MaterialTheme.typography.body2
             )
         }
@@ -150,13 +144,14 @@ fun PostCard(
             ItemTitle(item)
             AuthorAndReadTime(item)
         }
-        BookmarkButton(
-            isBookmarked = isFavorite,
-            onClick = onToggleFavorite,
-            // Remove button semantics so action can be handled at row level
-            modifier = Modifier.clearAndSetSemantics {},
-            contentAlpha = ContentAlpha.medium
-        )
+        // TODO: unimplemented
+//        BookmarkButton(
+//            isBookmarked = isFavorite,
+//            onClick = onToggleFavorite,
+//            // Remove button semantics so action can be handled at row level
+//            modifier = Modifier.clearAndSetSemantics {},
+//            contentAlpha = ContentAlpha.medium
+//        )
     }
 }
 
