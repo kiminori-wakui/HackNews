@@ -16,6 +16,7 @@
     <string name="app_name">HackNews</string>
     <string name="load_error">Can\'t update latest news</string>
     <string name="retry">Retry</string>
+    <string name="cd_add">Add</string>
     <string name="cd_add_to_favorites">Add to favorites</string>
     <string name="cd_share">Share</string>
     <string name="cd_text_settings">Text settings</string>

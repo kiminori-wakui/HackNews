@@ -45,7 +45,7 @@ import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -143,11 +143,13 @@ fun InterestsScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { /* TODO: Open search */ }
+                        onClick = {
+
+                        }
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = stringResource(R.string.cd_search)
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.cd_add)
                         )
                     }
                 },
